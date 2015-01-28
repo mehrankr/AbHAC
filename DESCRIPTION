@@ -1,0 +1,16 @@
+Package: CGNA
+Title: Cancer Genomics Network enrichment Analysis
+Version: 0.95
+Authors@R: "Mehran Karimzadeh <mehran.karimzadehreghbati@mail.mcgill.ca> [aut,
+    cre]"
+Maintainer: Mehran Karimzadeh
+ <mehran.karimzadehreghbati@mail.mcgill.ca>
+Description: Finds differentially expressed genes and having mutational
+    information on a series of patients, this package finds proteins with
+    significant enrichment in deregulated cancer categories based on whole
+    human proteome interaction network using fisher exact test on individual subnetworks
+Depends: pheatmap, parallel, plyr, limma, edgeR, R (>= 3.0)
+License: GPL-3
+LazyData: true
+Packaged: 2015-01-07 15:22:30 UTC; mkarimza
+Author: "Mehran Karimzadeh" [aut, cre]

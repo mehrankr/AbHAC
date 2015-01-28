@@ -1,0 +1,7 @@
+Random.ppis: .Random.seed Random.ppis
+clinical
+fac
+id.conversion.set: .Random.seed id.conversion.set
+ppi.database: .Random.seed ppi.database
+rna
+snv: .Random.seed snv
