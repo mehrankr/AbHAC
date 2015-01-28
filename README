@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>CGNA R package guide</title>
+	</head>
+	<body>
+		<h1>CGNA: Cancer Genomics Network Enrichment Analysis</h1>
+		<p> CGNA is an R package for implementation of a simplistic approach for analysis of 
+		cancer genomics datasets in context of protein interaction networks. Each protein in the whole proteome
+		network (interactome) is considered an individual subnetwork and based density of deregulated molecules at genomic
+		or transcriptomic levels among neighborhood of that protein as well as the whole interactome, a fisher's exact test
+		p-value is calculated. Full documentation is going to be available soon.</p>
+
+	</body>
+</html>
