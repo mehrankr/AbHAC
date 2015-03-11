@@ -266,7 +266,7 @@ snv.id.conversion <- function(snv=NULL
     }
   }
   return(snv)
-  ### An appropriate matrix of mutations for cgna analysis
+  ### An appropriate matrix of mutations for abhac analysis
 }
 
 
@@ -308,13 +308,13 @@ rna.id.conversion <- function(rna=NULL,
   }
   rownames(rna) <- rna.rn
   return(rna)
-  ### an appropriate matrix of expression for cgna analysis
+  ### an appropriate matrix of expression for abhac analysis
 }
 
 
-#' CGNA Internal Enrichment Calculator
+#' AbHAC Internal Enrichment Calculator
 #' 
-#' Internal Function that performs cgna analysis inside other functions
+#' Internal Function that performs abhac analysis inside other functions
 #' @param ppi.database 2 column whole protein interaction network. Either loaded by data(ppi.database)(filtering is recommended based on types of interactions) or bu used.
 #' @param list.categories (Internal) is list of proteins for each enrichment category with accurate names as of enrichment.categories
 #' @param fac is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.
@@ -331,18 +331,18 @@ Integrator <- function(ppi.database=NULL,
                        fac=NULL,
                        id.conversion.set=NULL,
                        fisher.fdr="Permutation",
-                       fisher.fdr.cutoff=0.2
+                       fisher.fdr.cutoff=0.05
 ){
   if(is.null(fac)){
-    fac = CGNA::fac
+    fac = AbHAC::fac
   }
   if(is.null(ppi.database)){
-    ppi.database = CGNA::ppi.database[,1:2]
+    ppi.database = AbHAC::ppi.database[,1:2]
   }
   if(is.null(id.conversion.set)){
-    id.conversion.set = CGNA::id.conversion.set
+    id.conversion.set = AbHAC::id.conversion.set
   }
-  Random.ppi <- CGNA::Random.ppis
+  Random.ppi <- AbHAC::Random.ppis
   ppi.lists <- c(Random.ppi,list(ppi.database))    
   list.results <- list()
   for(l in 1:length(list.categories)){
@@ -531,7 +531,7 @@ deizer <- function(rna=NULL,
                    fac=NULL
 ){
   if(is.null(fac)){
-    fac = CGNA::fac
+    fac = AbHAC::fac
   }
   if(is.null(fdr.cutoff)){
     fdr.cutoff=0.01
@@ -632,10 +632,10 @@ deizer <- function(rna=NULL,
 #' data(ppi.database) #2column whole human protein interaction database
 #' data(id.conversion.set) 
 #' data(fac) #vector of all proteins in ppi.database
-#' set.cgna.result = set.cgna(snv=snv,rna=rna,fac=fac,expression.method="Microarray",rna.paired=FALSE,
+#' set.abhac.result = set.abhac(snv=snv,rna=rna,fac=fac,expression.method="Microarray",rna.paired=FALSE,
 #'    fdr.cutoff=0.05,correction.method="BH",enrichment.categories=c("snv.de","de.up"),
 #'    ppi.database=ppi.database[,1:2],id.conversion.set=id.conversion.set)
-set.cgna <- function(ppi.database=NULL,
+set.abhac <- function(ppi.database=NULL,
                      ### dataframe of whole human protein interaction network that can be obtained from protein.database.creator()
                      rna=NULL,
                      ###a numeric matrix with rownames either as gene symbols, ensemble genes IDs, entrez IDs or uniprot IDs.
@@ -662,13 +662,13 @@ set.cgna <- function(ppi.database=NULL,
                      fisher.fdr.cutoff=0.2
 ){
   if(is.null(ppi.database)){
-    ppi.database <- CGNA::ppi.database[,1:2]
+    ppi.database <- AbHAC::ppi.database[,1:2]
   }
   if(is.null(fac)){
-    fac <- CGNA::fac
+    fac <- AbHAC::fac
   }
   if(is.null(id.conversion.set)){
-    id.conversion.set <- CGNA::id.conversion.set
+    id.conversion.set <- AbHAC::id.conversion.set
   }
   if(is.null(rna)|is.null(snv)|is.null(expression.method)|is.null(rna.paired)){
     stop("Please make sure all the arguments of the function are entered correctly")
@@ -698,8 +698,8 @@ set.cgna <- function(ppi.database=NULL,
   }
   #based on de method, find differentially expressed genes
   grs = unique(clinical[,2])
-  list.cgnas = vector('list',length(grs))
-  names(list.cgnas) = grs
+  list.abhacs = vector('list',length(grs))
+  names(list.abhacs) = grs
   lcind=1
   for(gr in grs){
     i=which(clinical[,2]==gr)
@@ -726,17 +726,17 @@ set.cgna <- function(ppi.database=NULL,
     list.categories <- list.categories[index.cat] 
     list.categories <- list.categories[which(names(list.categories)%in%enrichment.categories)]
     ## Local Function that gets snv.in, de.up, de.down, de and SNV and returns a dataframe of results
-    cgna <- Integrator(ppi.database=ppi.database,list.categories=list.categories,fac=fac,fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff)
-    list.cgnas[[lcind]] = cgna
+    abhac <- Integrator(ppi.database=ppi.database,list.categories=list.categories,fac=fac,fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff)
+    list.abhacs[[lcind]] = abhac
     lcind=lcind+1
   }
-  return(list.cgnas)
+  return(list.abhacs)
   ### Returns a dataframe with each protein and enrichments in 3 different categories
 }
 
 
-#' CGNA Based on Vector Inputs
-#' This function performs CGNA analysis on inputs of mutations, upregulated and downregulated proteins
+#' AbHAC Based on Vector Inputs
+#' This function performs AbHAC analysis on inputs of mutations, upregulated and downregulated proteins
 #' @param de.up either ensembl gene IDs, HGNC, ENTREZ or uniprot IDs for a vector of upregulated genes 
 #' @param de.down either ensembl gene IDs, HGNC, ENTREZ or uniprot IDs for a vector of downregulated genes
 #' @param snv either ensembl gene IDs, HGNC, ENTREZ or uniprot IDs for a vector of mutated genes
@@ -758,8 +758,8 @@ set.cgna <- function(ppi.database=NULL,
 #' data(ppi.database) #2column whole human protein interaction database
 #' data(id.conversion.set) 
 #' data(fac) #vector of all proteins in ppi.database
-#' cgna.brief.result = cgna.brief(de.up,de.down,fac=fac,snv=snv,enrichment.categories=c("snv.de","de.up"),ppi.database=ppi.database[,1:2],id.conversion.set=id.conversion.set)
-cgna.brief <- function(de.up=NULL,
+#' abhac.brief.result = abhac.brief(de.up,de.down,fac=fac,snv=snv,enrichment.categories=c("snv.de","de.up"),ppi.database=ppi.database[,1:2],id.conversion.set=id.conversion.set)
+abhac.brief <- function(de.up=NULL,
                        ### Uniprot acession ID of upregulated genes
                        de.down=NULL,
                        ### Uniprot accession ID of downregulated proteins
@@ -779,13 +779,13 @@ cgna.brief <- function(de.up=NULL,
     stop("Please make sure all IDs are in Uniprot accession format. You can use ids.to.uniprot function on your vectors for automatic conversion if your IDs are in gene symbol or ensembl gene ID format.")
   }
   if(is.null(ppi.database)){
-    ppi.database <- CGNA::ppi.database[,1:2]
+    ppi.database <- AbHAC::ppi.database[,1:2]
   }
   if(is.null(id.conversion.set)){
-    id.conversion.set <- CGNA::id.conversion.set
+    id.conversion.set <- AbHAC::id.conversion.set
   }
   if(is.null(fac)){
-    fac <- CGNA::fac
+    fac <- AbHAC::fac
   }
   if(is.null(enrichment.categories)){
     enrichment.categories <- c("snv.de","de.up","de.down")
@@ -808,8 +808,8 @@ cgna.brief <- function(de.up=NULL,
   }
   list.categories <- list.categories[index.cat] 
   list.categories <- list.categories[which(names(list.categories)%in%enrichment.categories)]
-  cgna <- Integrator(ppi.database=ppi.database[,1:2],list.categories=list.categories,
+  abhac <- Integrator(ppi.database=ppi.database[,1:2],list.categories=list.categories,
                      fac=fac,id.conversion.set=id.conversion.set. , fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff)
-  return(cgna)
+  return(abhac)
   ### Returns a dataframe with each protein, all its interactors, and enrichments in 3 different categories, before and after correction for multiple testing
 }
