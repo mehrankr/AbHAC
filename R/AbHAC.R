@@ -703,23 +703,38 @@ set.abhac <- function(ppi.database=NULL,
   lcind=1
   for(gr in grs){
     i=which(clinical[,2]==gr)
-    DE <- deizer(rna=rna,correction.method=correction.method,paired=rna.paired,expression.method=expression.method,i=i,fdr.cutoff=fdr.cutoff,fac=fac)
+    if(!is.null(rna)){
+      DE <- deizer(rna=rna,correction.method=correction.method,paired=rna.paired,expression.method=expression.method,i=i,fdr.cutoff=fdr.cutoff,fac=fac)
+      de.up <- DE$de.up
+      de.down <- DE$de.down
+      de <- DE$de
+    }
+    if(!is.null(snv)){
+      SNV <- rownames(snv)[apply(!is.na(snv[,i]),2,sum)>0]
+    }
     list.categories <- list()
-    de.up <- DE$de.up
-    de.down <- DE$de.down
-    de <- DE$de
-    SNV <- rownames(snv)
-    list.categories[[1]] <- c(list(SNV),list(de.up),list(de.down))
-    list.categories[[2]] <- de.up
-    list.categories[[3]] <- de.down
-    list.categories[[4]] <- union(de.up,de.down)
-    list.categories[[5]] <- SNV
-    list.categories[[6]] <- c(list(SNV),list(de.up))
-    list.categories[[7]] <- c(list(SNV),list(de.down))
-    list.categories[[8]] <- c(list(SNV),list(de))
-    names(list.categories) <- c("snv.de.up.de.down","de.up","de.down",
+    if(!is.null(snv) & !is.null(rna)){
+      list.categories[[1]] <- c(list(SNV),list(de.up),list(de.down))
+      list.categories[[2]] <- de.up
+      list.categories[[3]] <- de.down
+      list.categories[[4]] <- union(de.up,de.down)
+      list.categories[[5]] <- SNV
+      list.categories[[6]] <- c(list(SNV),list(de.up))
+      list.categories[[7]] <- c(list(SNV),list(de.down))
+      list.categories[[8]] <- c(list(SNV),list(de))
+      names(list.categories) <- c("snv.de.up.de.down","de.up","de.down",
                                 "de","snv","snv.de.up","snv.de.down","snv.de")
+    }else if(is.null(snv)){
+      list.categories = list(snv=SNV)
+    }else{
+      list.categories = list(de.up = de.up,
+        de.down = de.down,
+        de = de)
+    }
     index.cat <- numeric()
+    if(length(enrichment.categories)!=length(list.categories)){
+      stop("Make sure proper enrichment categories are queried according to the provided datasets")
+    }
     for(z in 1:length(enrichment.categories)){
       index.cat <- c(index.cat,which(names(list.categories)%in%enrichment.categories[z]))
     }
