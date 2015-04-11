@@ -647,19 +647,19 @@ set.abhac <- function(ppi.database=NULL,
                      ###If there is no mutation in an entry of matrix, it should be NA and if there is a mutation it can be any character.
                      expression.method=NULL,
                      ### "RNAseq" or "Microarray"
-                     rna.paired=NULL,
+                     rna.paired=FALSE,
                      ### a boolean indicating if adjacent normal tissue expression is available for each tumor tissue column.
-                     correction.method=NULL,
+                     correction.method="BH",
                      ### "holm", "hochberg", "hommel", "bonferroni", "BH", "BY" or "fdr"}
-                     fdr.cutoff=NULL,
+                     fdr.cutoff=0.05,
                      ### 0.01 or 0.05 are suggested. All values in range of 0 and 1 are accepted
-                     enrichment.categories=c("snv.de","de.up","de.down"),
+                     enrichment.categories=NULL,
                      ### a string vector for any of these variables; "snv.in","de.up","de.down","de","snv","snv.de.up","snv.de.down"
                      id.conversion.set=NULL,
                      fac=NULL,
                      clinical=NULL,
                      fisher.fdr="Permutation",
-                     fisher.fdr.cutoff=0.2
+                     fisher.fdr.cutoff=0.05
 ){
   if(is.null(ppi.database)){
     ppi.database <- AbHAC::ppi.database[,1:2]
@@ -670,28 +670,28 @@ set.abhac <- function(ppi.database=NULL,
   if(is.null(id.conversion.set)){
     id.conversion.set <- AbHAC::id.conversion.set
   }
-  if(is.null(rna)|is.null(snv)|is.null(expression.method)|is.null(rna.paired)){
+  if(is.null(rna) & is.null(snv)){
     stop("Please make sure all the arguments of the function are entered correctly")
   }
-  if(is.null(correction.method)){
-    correction.method="BH"
+  if(!is.null(rna) & !is.null(snv)){
+    if(!all(colnames(snv)==gsub("T","",colnames(rna)[grep("T",colnames(rna))]))){
+      stop("Make sure column names of snv and rna are the same and an additional T exists on each RNA columnname")
+    }
   }
-  if(is.null(fdr.cutoff)){
-    fdr.cutoff=0.05
+  if(!is.null(rna)){
+    if(!any(grepl("N",colnames(rna)))){
+      stop("Normal RNA samples should have a 'N' suffix")
+    } 
+    if(!any(rownames(rna)%in%id.conversion.set[,2])){
+      print(paste("rna matrix IDs are not uniprot, trying for conversion, averiging duplicates, removing those without IDs"))
+      rna <- rna.id.conversion(rna,id.conversion.set)
+    }
   }
-  if(!all(colnames(snv)==gsub("T","",colnames(rna)[grep("T",colnames(rna))]))){
-    stop("Make sure column names of snv and rna are the same and an additional T exists on each RNA columnname")
-  }
-  if(!any(grepl("N",colnames(rna)))){
-    stop("Normal RNA samples should have a 'N' suffix")
-  }
-  if(!any(rownames(rna)%in%id.conversion.set[,2])){
-    print(paste("rna matrix IDs are not uniprot, trying for conversion, averiging duplicates, removing those without IDs"))
-    rna <- rna.id.conversion(rna,id.conversion.set)
-  }
-  if(!any(rownames(snv)%in%id.conversion.set[,2])){
-    print(paste("snv matrix IDs are not uniprot, trying for conversion, averiging duplicates, removing those without IDs"))
-    snv <- snv.id.conversion(snv,id.conversion.set)
+  if(!is.null(snv)){
+    if(!any(rownames(snv)%in%id.conversion.set[,2])){
+      print(paste("snv matrix IDs are not uniprot, trying for conversion, averiging duplicates, removing those without IDs"))
+      snv <- snv.id.conversion(snv,id.conversion.set)
+    }
   }
   if(is.null(clinical)){
     clinical <- data.frame(Patient=colnames(snv),Status="Tumor")
@@ -785,13 +785,10 @@ abhac.brief <- function(de.up=NULL,
                        enrichment.categories=NULL,
                        fac=NULL,
                        fisher.fdr="Permutation",
-                       fisher.fdr.cutoff=0.2,
+                       fisher.fdr.cutoff=0.05,
                        id.conversion.set=NULL){
-  if(is.null(de.up)|is.null(de.down)|is.null(snv)){
+  if(is.null(de.up) & is.null(de.down) & is.null(snv)){
     stop("Please make sure the 3 main variables (de.up, de.down, snv) are entered correctly")
-  }
-  if(!any(de.up%in%id.conversion.set[,2])){
-    stop("Please make sure all IDs are in Uniprot accession format. You can use ids.to.uniprot function on your vectors for automatic conversion if your IDs are in gene symbol or ensembl gene ID format.")
   }
   if(is.null(ppi.database)){
     ppi.database <- AbHAC::ppi.database[,1:2]
@@ -802,9 +799,22 @@ abhac.brief <- function(de.up=NULL,
   if(is.null(fac)){
     fac <- AbHAC::fac
   }
-  if(is.null(enrichment.categories)){
-    enrichment.categories <- c("snv.de","de.up","de.down")
+  if(!is.null(de.up)){
+    if(length(intersect(de.up, id.conversion.set[,2]))==0){
+      de.up = ids.to.uniprot(de.up)
+    }
   }
+  if(!is.null(de.down)){
+    if(length(intersect(de.down, id.conversion.set[,2]))==0){
+      de.up = ids.to.uniprot(de.down)
+    }
+  }
+  if(!is.null(snv)){
+    if(length(intersect(snv, id.conversion.set[,2]))==0){
+      snv = ids.to.uniprot(snv)
+    }
+  }
+
   id.conversion.set. <- id.conversion.set
   list.categories <- list()
   list.categories[[1]] <- c(list(snv),list(de.up),list(de.down))
