@@ -6,7 +6,7 @@ This function performs CGNA analysis on inputs of mutations, upregulated and dow
 \usage{
 abhac.brief(de.up = NULL, de.down = NULL, snv = NULL,
   ppi.database = NULL, enrichment.categories = NULL, fac = NULL,
-  fisher.fdr = "Permutation", fisher.fdr.cutoff = 0.2,
+  fisher.fdr = "Permutation", fisher.fdr.cutoff = 0.05,
   id.conversion.set = NULL)
 }
 \arguments{

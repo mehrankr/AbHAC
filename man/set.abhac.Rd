@@ -7,7 +7,7 @@ set.abhac(ppi.database = NULL, rna = NULL, snv = NULL,
   expression.method = NULL, rna.paired = NULL, correction.method = NULL,
   fdr.cutoff = NULL, enrichment.categories = c("snv.de", "de.up",
   "de.down"), id.conversion.set = NULL, fac = NULL, clinical = NULL,
-  fisher.fdr = "Permutation", fisher.fdr.cutoff = 0.2)
+  fisher.fdr = "Permutation", fisher.fdr.cutoff = 0.05)
 }
 \arguments{
 \item{snv}{a character matrix with row names as either of uniprot IDs, gene symbols, entrez IDs or ensemble gene Ids. When there is no mutation, NA is expected.}
