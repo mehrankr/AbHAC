@@ -39,7 +39,7 @@ The AbHAC functions require the first 2 columns of this dataframe. The IDs must 
 
 
 __Random.ppis__: A list object containing N different _ppi.database_ dataframes that are permuted. 
-We used 10 of such dataframes (permutation scheme described in the (thesis)[http://www.abhac.com/]/(paper)[http://www.abhac.com/]). 
+We used 10 of such dataframes (permutation scheme described in the [thesis](http://www.abhac.com/)/[paper](http://www.abhac.com/)). 
 You can choose to supply your own into the functions.
 
 
