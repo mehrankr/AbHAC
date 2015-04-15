@@ -4,12 +4,16 @@
 
 
 AbHAC is an R package for implementation of a simplistic approach for analysis of 
-cancer genomics datasets in context of protein interaction networks. Each protein in the whole proteome
-network (interactome) is considered an individual subnetwork and based on density of deregulated molecules at genomic
+cancer genomics datasets in context of protein interaction networks. 
+In AbHAC, each protein in the protein interaction network is considered as an individual subnetwork 
+and based on abundance of molecules with aberrations at genomic
 or transcriptomic levels among neighborhood of that protein as well as the whole interactome, a Fisher's exact test
-p-value is calculated. Full documentation is going to be available soon.
-'
-## Usage: _Required objects_:
+p-value is calculated. The Fisher's exact test p-values are then corrected for multiple testing
+by permutation of the protein interaction network. Details are available in the [paper](http://www.abhac.com/)/[thesis](http://www.abhac.com/) manuscript.
+
+
+
+## Usage: _Required objects_
 
 __snv__: a matrix/dataframe where column names represent name of samples
 and rownames represent name of genes. Value of each cell can either be NA or a character (e,g. "Mutated")
@@ -21,7 +25,7 @@ they should be: aT | bT | cT ... . These must be followed with nontumour samples
 It is possible for the nontumour samples to have the same name (aN | bN ...) or something different (a2313N | a321bchN).
 
 
-## Usage: _Optional objects_:
+## Usage: _Optional objects_
 
 __clinical__: A dataframe with first column having the same names as _snv_, and the second column providing information about samples.
 These can be Metastasis/Primary, HighGrade/LowGrade or any other sets of strings describing patients subtypes.
@@ -35,7 +39,7 @@ The AbHAC functions require the first 2 columns of this dataframe. The IDs must 
 
 
 __Random.ppis__: A list object containing N different _ppi.database_ dataframes that are permuted. 
-We used 10 of such dataframes (permutation scheme described in the thesis/paper). 
+We used 10 of such dataframes (permutation scheme described in the (thesis)[http://www.abhac.com/]/(paper)[http://www.abhac.com/]). 
 You can choose to supply your own into the functions.
 
 
@@ -43,7 +47,7 @@ __id.conversion.set__: A dataframe with the following columns, used in ID conver
 
 
 
-## Usage: _Examples_:
+## Usage: _Examples_
 
 Installing the package and all of its dependencies:
 
