@@ -702,15 +702,19 @@ set.abhac <- function(ppi.database=NULL,
   names(list.abhacs) = grs
   lcind=1
   for(gr in grs){
+    cat(paste("Performing AbHAC analysis for:", gr, "\n"))
     i=which(clinical[,2]==gr)
     if(!is.null(rna)){
-      DE <- deizer(rna=rna,correction.method=correction.method,paired=rna.paired,expression.method=expression.method,i=i,fdr.cutoff=fdr.cutoff,fac=fac)
+      DE <- deizer(rna=rna,correction.method=correction.method,
+		paired=rna.paired,expression.method=expression.method,
+		i=i,fdr.cutoff=fdr.cutoff,
+		fac=fac)
       de.up <- DE$de.up
       de.down <- DE$de.down
       de <- DE$de
     }
     if(!is.null(snv)){
-      SNV <- rownames(snv)[apply(!is.na(snv[,i]),2,sum)>0]
+      SNV <- rownames(snv)[apply(!is.na(snv[,i]),1,sum)>0]
     }
     list.categories <- list()
     if(!is.null(snv) & !is.null(rna)){
@@ -724,7 +728,7 @@ set.abhac <- function(ppi.database=NULL,
       list.categories[[8]] <- c(list(SNV),list(de))
       names(list.categories) <- c("snv.de.up.de.down","de.up","de.down",
                                 "de","snv","snv.de.up","snv.de.down","snv.de")
-    }else if(is.null(snv)){
+    }else if(!is.null(snv)){
       list.categories = list(snv=SNV)
     }else{
       list.categories = list(de.up = de.up,
@@ -732,16 +736,18 @@ set.abhac <- function(ppi.database=NULL,
         de = de)
     }
     index.cat <- numeric()
-    if(length(enrichment.categories)!=length(list.categories)){
-      stop("Make sure proper enrichment categories are queried according to the provided datasets")
-    }
     for(z in 1:length(enrichment.categories)){
       index.cat <- c(index.cat,which(names(list.categories)%in%enrichment.categories[z]))
     }
     list.categories <- list.categories[index.cat] 
     list.categories <- list.categories[which(names(list.categories)%in%enrichment.categories)]
+    if(length(enrichment.categories)!=length(list.categories)){
+      stop("Make sure proper enrichment categories are queried according to the provided datasets")
+    }
     ## Local Function that gets snv.in, de.up, de.down, de and SNV and returns a dataframe of results
-    abhac <- Integrator(ppi.database=ppi.database,list.categories=list.categories,fac=fac,fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff)
+    abhac <- Integrator(ppi.database=ppi.database, list.categories=list.categories,
+	fac=fac, fisher.fdr=fisher.fdr,
+	fisher.fdr.cutoff=fisher.fdr.cutoff)
     list.abhacs[[lcind]] = abhac
     lcind=lcind+1
   }
