@@ -84,12 +84,12 @@ NULL
 uniprot.to.hgnc <- function(uniprot, id.con.set=id.conversion.set){
     # If a uniprot ID is not found, it returns the ID itself instead of ""
     if(any(id.con.set$UNIPROTKB %in% uniprot)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES), ]
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
         hgnc = temp_idconv$GENES[uniprot]
     }else{
         warning(sprintf("Uniprot to HGNC conversion failed for %s %s %s ...\n",
-                        uniprot[1], uniprot[1], uniprot[3]))
+                        uniprot[1], uniprot[2], uniprot[3]))
         hgnc = uniprot
     }
     return(hgnc)
@@ -106,7 +106,7 @@ uniprot.to.hgnc <- function(uniprot, id.con.set=id.conversion.set){
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
     if(any(id.con.set$GENES %in% hgnc)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB), ]
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$GENES
         hgnc = temp_idconv$UNIPROTKB[hgnc]
     }else{
@@ -115,7 +115,7 @@ hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
         uniprot = hgnc
     }
     return(uniprot)
-  # Output is a vector os same length. Unmapped IDs as NA
+  # Output is a vector of same length. Unmapped IDs as NA
 }
 
 
@@ -130,13 +130,17 @@ hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
 #' @examples
 #' uniprot.to.entrez(ids.to.uniprot("VHL"))
 uniprot.to.entrez <- function(uniprot=NULL,id.con.set=id.conversion.set){
-  if(any(id.con.set[,2]%in%uniprot)){
-    temp <- as.character(id.con.set[which(id.con.set[,2]%in%uniprot),1])
-    if(any(is.na(temp))){temp <- temp[-which(is.na(temp))]}
-  }else{temp <- uniprot}
-  return(temp[1])
-  ### Returns one entrez ID or Input if not found
-  
+    if(any(id.con.set$UNIPROTKB %in% uniprot)){
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$ENTREZ_GENE)), ]
+        rownames(temp_idconv) = temp_idconv$UNIPROTKB
+        entrez= temp_idconv$ENTREZ_GENE[uniprot]
+    }else{
+        warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
+                        uniprot[1], uniprot[2], uniprot[3]))
+        entrez = uniprot
+    }
+    return(entrez)
+  # Output is a vector of same length. Unmapped IDs as NA
 }
 
 
@@ -148,14 +152,19 @@ uniprot.to.entrez <- function(uniprot=NULL,id.con.set=id.conversion.set){
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 ensembl.to.uniprot <- function(ensembl=NULL,id.con.set=id.conversion.set){
-  if(any(id.con.set[,4]%in%ensembl)){
-    temp <- as.character(id.con.set[which(id.con.set[,4]%in%ensembl),2])
-    if(any(is.na(temp))){temp <- temp[-which(is.na(temp))]}
-  }else{temp <- ensembl}
-  return(temp[1])
-  ### Returns one ensembl gene ID or input
-  
+    if(any(id.con.set$ENSEMBL %in% ensembl)){
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$ENSEMBL) | is.na(id.con.set$UNIPROTKB)), ]
+        rownames(temp_idconv) = temp_idconv$ENSEMBL
+        ensembl = temp_idconv$UNIPROTKB[ensembl]
+    }else{
+        warning(sprintf("Ensembl to Uniprot conversion failed for %s %s %s ...\n",
+                        ensembl[1], ensembl[2], ensembl[3]))
+        uniprot = ensembl
+    }
+    return(ensembl)
+  # Output is a vector of same length. Unmapped IDs as NA
 }
+
 #' Refseq Protein to Uniprot Conversion Function
 #' 
 #' Converts Human  Protein Refseq IDs to Uniprot
@@ -165,13 +174,17 @@ ensembl.to.uniprot <- function(ensembl=NULL,id.con.set=id.conversion.set){
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 refseqp.to.uniprot <- function(refseqp=NULL,
                                id.con.set=id.conversion.set){
-  refseqp <- unlist(strsplit(refseqp,".",T))[1]
-  if(any(id.con.set[,5]%in%refseqp)){
-    temp <- as.character(id.con.set[which(id.con.set[,5]%in%refseqp),2])
-    if(any(is.na(temp))){temp <- temp[-which(is.na(temp))]}
-  }else{temp <- refseqp}
-  return(temp[1])
-  ### Returns one uniprot ID or input if match not found
+    if(any(id.con.set$REFSEQ_PROTEIN %in% refseqp)){
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$REFSEQ_PROTEIN) | is.na(id.con.set$UNIPROTKB)), ]
+        rownames(temp_idconv) = temp_idconv$REFSEQ_PROTEIN
+        uniprot = temp_idconv$UNIPROTKB[regseqp]
+    }else{
+        warning(sprintf("Regseqp to Uniprot conversion failed for %s %s %s ...\n",
+                        refseqp[1], refseqp[2], refseqp[3]))
+        uniprot = refseqp
+    }
+    return(uniprot)
+  # Output is a vector of same length. Unmapped IDs as NA
 }
 
 #' any ID to Uniprot Conversion
