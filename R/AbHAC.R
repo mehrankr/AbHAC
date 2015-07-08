@@ -81,7 +81,7 @@ NULL
 #' @export
 #' @examples
 #' uniprot.to.hgnc(ids.to.uniprot("VHL"))
-uniprot.to.hgnc <- function(uniprot=NULL,id.con.set=id.conversion.set){
+uniprot.to.hgnc <- function(uniprot, id.con.set=id.conversion.set){
     # If a uniprot ID is not found, it returns the ID itself instead of ""
     if(any(id.con.set$UNIPROTKB %in% uniprot)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES), ]
@@ -96,6 +96,7 @@ uniprot.to.hgnc <- function(uniprot=NULL,id.con.set=id.conversion.set){
     # Output is a vector of same length. Unmapped IDs as NA
 }
 
+
 #' HGNC Symbol to Uniprot Accession Conversion
 #' 
 #' Converts human gene symbols to uniprot swissprot acession
@@ -103,15 +104,20 @@ uniprot.to.hgnc <- function(uniprot=NULL,id.con.set=id.conversion.set){
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
-hgnc.to.uniprot <- function(hgnc=NULL,id.con.set=id.conversion.set){
-  temp <- character()
-  if(any(id.con.set[,3]%in%hgnc)){
-    i=which(id.con.set[,3]%in%hgnc)
-    temp <- id.con.set[i,2][1]
-  }else{temp <- hgnc}
-  return(temp)
-  ### Returns 1 Uniprot accession or input
+hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
+    if(any(id.con.set$GENES %in% hgnc)){
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB), ]
+        rownames(temp_idconv) = temp_idconv$GENES
+        hgnc = temp_idconv$UNIPROTKB[hgnc]
+    }else{
+        warning(sprintf("HGNC to Uniprot conversion failed for %s %s %s ...\n",
+                        hgnc[1], hgnc[1], hgnc[3]))
+        uniprot = hgnc
+    }
+    return(uniprot)
+  # Output is a vector os same length. Unmapped IDs as NA
 }
+
 
 #' Uniprot Accession to Entrez Gene ID conversion
 #' 
@@ -194,7 +200,7 @@ ids.to.uniprot <- function(ids=NULL,id.con.set=id.conversion.set){
     }
   }else if(any(ids%in%id.con.set[,3])){
     print(paste("Converting IDs from HGNC to Uniprot"))
-    temp <- sapply(ids,hgnc.to.uniprot)
+    temp <- hgnc.to.uniprot(ids)
   }else if(any(ids%in%id.con.set[,4])){
     print(paste("Converting IDs from ENSEMBL to Uniprot"))
     if(.Platform$OS.type!="windows"){
