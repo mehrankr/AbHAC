@@ -81,16 +81,19 @@ NULL
 #' @export
 #' @examples
 #' uniprot.to.hgnc(ids.to.uniprot("VHL"))
-uniprot.to.hgnc <- function(uniprot=NULL,id.con.set=id.conversion.set
-                            ### If a uniprot ID is not found, it returns the ID itself instead of ""
-                            
-){
-  if(any(id.con.set[,2]%in%uniprot)){
-    temp <- as.character(id.con.set[which(id.con.set[,2]%in%uniprot),3])
-    if(any(is.na(temp))){temp <- temp[-which(is.na(temp))]}
-  }else{temp <- uniprot}
-  return(temp[1])
-  ###Output is one uGene Symbol ID or input
+uniprot.to.hgnc <- function(uniprot=NULL,id.con.set=id.conversion.set){
+    # If a uniprot ID is not found, it returns the ID itself instead of ""
+    if(any(id.con.set$UNIPROTKB %in% uniprot)){
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES), ]
+        rownames(temp_idconv) = temp_idconv$UNIPROTKB
+        hgnc = temp_idconv$GENES[uniprot]
+    }else{
+        warning(sprintf("Uniprot to HGNC conversion failed for %s %s %s ...\n",
+                        uniprot[1], uniprot[1], uniprot[3]))
+        hgnc = uniprot
+    }
+    return(hgnc)
+    # Output is a vector of same length. Unmapped IDs as NA
 }
 
 #' HGNC Symbol to Uniprot Accession Conversion
@@ -494,10 +497,7 @@ Integrator <- function(ppi.database=NULL,
     temp.tbl[ord.ind,j] <- list.temp[,2]
   }
   result <- cbind(result,temp.tbl)
-  result$HGNC <- sapply(as.character(result[,1]),uniprot.to.hgnc)
-  result$HGNC <- sapply(as.character(result$HGNC),function(x){
-    return(unlist(strsplit(x," ",T))[1])
-  })
+  result$HGNC <- uniprot.to.hgnc(result[,1])
   return(result)
   ###Output is is a dataframe listing FDRs for each protein in each enrichment category
 }
