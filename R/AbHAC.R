@@ -144,6 +144,32 @@ uniprot.to.entrez <- function(uniprot=NULL,id.con.set=id.conversion.set){
 }
 
 
+#' Entrez Gene ID to Uniprot accession
+#' 
+#' Converts Entrez Gene ID to uniprot accessions
+#' @param Entrez is vector of Entrez ID characters
+#' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
+#' @return If a Entrez accession is not found, the return will be the ID itself
+#' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
+#' @export
+#' @examples
+#' entrez.to.uniprot(c("12", "5421", "65223"))
+entrez.to.uniprot <- function(entrez=NULL,id.con.set=id.conversion.set){
+    if(any(id.con.set$ENTREZ_GENE %in% entrez)){
+        temp_idconv = id.con.set[-which(duplicated(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)), ]
+        rownames(temp_idconv) = temp_idconv$ENTREZ_GENE
+        entrez= temp_idconv$UNIPROTKB[entrez]
+    }else{
+        warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
+                        entrez[1], entrez[2], entrez[3]))
+        uniprot = entrez
+    }
+    return(uniprot)
+  # Output is a vector of same length. Unmapped IDs as NA
+}
+
+
+
 #' Ensembl Gene ID to Uniprot Accession Conversion
 #' 
 #' Converts ENSEMBL Human Gene IDs to Uniprot
