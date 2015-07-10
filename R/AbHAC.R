@@ -380,7 +380,27 @@ rna.id.conversion = function(rna=NULL,
 ##  Two scripts for creating permuted networks  ##
 ##################################################
 
-
+#' Making Protein Edge Reoccurence dataframe
+#'
+#' Used inside the fisher exact test motor function for creating subsequent permuted networks.
+#' @param ppi.database 2 column undirected protein interaction network.
+#' @param fac vector of unique proteins inside ppi.database
+#' @return A dataframe describing frequency of proteins within each edge degree.
+#' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
+#' @export
+get_edgedegree_freq = function(ppi.database, fac){
+    ppi_temp = unique(ppi.database)
+    ppi_temp$AB = paste(ppi_temp[,1], ppi_temp[,2], sep="_")
+    ppi_temp$BA = paste(ppi_temp[,2], ppi_temp[,1], sep="_")
+    # Removing reversed interactions
+    if(any(ppi_temp$BA %in% ppi_temp$AB)){
+        ppi_temp = ppi_temp[-which(ppi_temp$BA %in% ppi_temp$AB), 1:2]
+    }
+    vec_freq = table(c(ppi_temp[,1], ppi_temp[,2]))
+    df_freq = data.frame(Uniprot=names(vec_freq),
+                         Num.Interactions=as.numeric(vec_freq))
+    return(df_freq)
+}
 
 
 #################################################
