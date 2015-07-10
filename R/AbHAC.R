@@ -1,3 +1,7 @@
+###############################################
+## Documenting available data in the package ##
+###############################################
+
 #' @name ppi.database
 #' @title Whole Human Protein Interaction Network
 #' @description This data set is obtained with bioconductor PSICQUIC package accessing following databases: DIP,InnateDB,IntAct,MatrixDB,MINT,I2D-IMEx,InnateDB-IMEx,MolCon,BindingDB
@@ -71,17 +75,21 @@ NULL
 NULL
 
 
-#' Uniprot Accession to HGC symbol Conversion
+###############################################
+##   A bunch of scripts for ID conversion    ##
+###############################################
+
+#' Uniprot Accession to HGNC symbol Conversion
 #' 
 #' This function is used internally to convert uniprot Accession to HGNC symbol
-#' @param uniprot is one Uniprot accession string
+#' @param uniprot is a vector of Uniprot accession IDs
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
-#' @return If a HGNC is not found, it returns the ID itself instead of ""
+#' @return If a HGNC is not found, it returns the ID itself instead of NA
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
 #' @examples
 #' uniprot.to.hgnc(ids.to.uniprot("VHL"))
-uniprot.to.hgnc <- function(uniprot, id.con.set=id.conversion.set){
+uniprot.to.hgnc = function(uniprot, id.con.set=id.conversion.set){
     # If a uniprot ID is not found, it returns the ID itself instead of ""
     if(any(id.con.set$UNIPROTKB %in% uniprot)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES)), ]
@@ -92,6 +100,9 @@ uniprot.to.hgnc <- function(uniprot, id.con.set=id.conversion.set){
                         uniprot[1], uniprot[2], uniprot[3]))
         hgnc = uniprot
     }
+    if(any(is.na(hgnc))){
+        hgnc[which(is.na(hgnc))] = uniprot[which(is.na(hgnc))]
+    }
     return(hgnc)
     # Output is a vector of same length. Unmapped IDs as NA
 }
@@ -100,11 +111,11 @@ uniprot.to.hgnc <- function(uniprot, id.con.set=id.conversion.set){
 #' HGNC Symbol to Uniprot Accession Conversion
 #' 
 #' Converts human gene symbols to uniprot swissprot acession
-#' @param hgnc is one HGNC symbol accession string
+#' @param hgnc is a vector of HGNC symbols
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
-hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
+hgnc.to.uniprot = function(hgnc, id.con.set=id.conversion.set){
     if(any(id.con.set$GENES %in% hgnc)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$GENES
@@ -114,6 +125,9 @@ hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
                         hgnc[1], hgnc[1], hgnc[3]))
         uniprot = hgnc
     }
+    if(any(is.na(uniprot))){
+        uniprot[which(is.na(uniprot))] = hgnc[which(is.na(uniprot))]
+    }
     return(uniprot)
   # Output is a vector of same length. Unmapped IDs as NA
 }
@@ -122,14 +136,14 @@ hgnc.to.uniprot <- function(hgnc, id.con.set=id.conversion.set){
 #' Uniprot Accession to Entrez Gene ID conversion
 #' 
 #' Converts Uniprot accession to Entrez Gene ID
-#' @param uniprot is one uniprot accession string
+#' @param uniprot is a vector of uniprot accession IDs
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @return If a Entrez accession is not found, it returns the ID itself instead of "".
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
 #' @examples
 #' uniprot.to.entrez(ids.to.uniprot("VHL"))
-uniprot.to.entrez <- function(uniprot=NULL,id.con.set=id.conversion.set){
+uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
     if(any(id.con.set$UNIPROTKB %in% uniprot)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$ENTREZ_GENE)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
@@ -139,8 +153,11 @@ uniprot.to.entrez <- function(uniprot=NULL,id.con.set=id.conversion.set){
                         uniprot[1], uniprot[2], uniprot[3]))
         entrez = uniprot
     }
+    if(any(is.na(entrez))){
+        entrez[which(is.na(entrez))] = uniprot[which(is.na(entrez))]
+    }
     return(entrez)
-  # Output is a vector of same length. Unmapped IDs as NA
+  # Output is a vector of same length. Unmapped IDs returned as input
 }
 
 
@@ -154,7 +171,7 @@ uniprot.to.entrez <- function(uniprot=NULL,id.con.set=id.conversion.set){
 #' @export
 #' @examples
 #' entrez.to.uniprot(c("12", "5421", "65223"))
-entrez.to.uniprot <- function(entrez=NULL,id.con.set=id.conversion.set){
+entrez.to.uniprot = function(entrez=NULL,id.con.set=id.conversion.set){
     if(any(id.con.set$ENTREZ_GENE %in% entrez)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$ENTREZ_GENE
@@ -163,6 +180,9 @@ entrez.to.uniprot <- function(entrez=NULL,id.con.set=id.conversion.set){
         warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
                         entrez[1], entrez[2], entrez[3]))
         uniprot = entrez
+    }
+    if(any(is.na(uniprot))){
+        uniprot[which(is.na(uniprot))] = entrez[which(is.na(uniprot))]
     }
     return(uniprot)
   # Output is a vector of same length. Unmapped IDs as NA
@@ -173,11 +193,11 @@ entrez.to.uniprot <- function(entrez=NULL,id.con.set=id.conversion.set){
 #' Ensembl Gene ID to Uniprot Accession Conversion
 #' 
 #' Converts ENSEMBL Human Gene IDs to Uniprot
-#' @param ensembl is one ensembl gene ID symbol accession string
+#' @param ensembl is a vector of ensembl gene IDs
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
-ensembl.to.uniprot <- function(ensembl=NULL,id.con.set=id.conversion.set){
+ensembl.to.uniprot = function(ensembl=NULL,id.con.set=id.conversion.set){
     if(any(id.con.set$ENSEMBL %in% ensembl)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$ENSEMBL) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$ENSEMBL
@@ -187,7 +207,10 @@ ensembl.to.uniprot <- function(ensembl=NULL,id.con.set=id.conversion.set){
                         ensembl[1], ensembl[2], ensembl[3]))
         uniprot = ensembl
     }
-    return(ensembl)
+    if(any(is.na(uniprot))){
+        uniprot[which(is.na(uniprot))] = ensembl[which(is.na(uniprot))]
+    }
+    return(uniprot)
   # Output is a vector of same length. Unmapped IDs as NA
 }
 
@@ -198,7 +221,7 @@ ensembl.to.uniprot <- function(ensembl=NULL,id.con.set=id.conversion.set){
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
-refseqp.to.uniprot <- function(refseqp=NULL,
+refseqp.to.uniprot = function(refseqp=NULL,
                                id.con.set=id.conversion.set){
     if(any(id.con.set$REFSEQ_PROTEIN %in% refseqp)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$REFSEQ_PROTEIN) | is.na(id.con.set$UNIPROTKB)), ]
@@ -208,6 +231,9 @@ refseqp.to.uniprot <- function(refseqp=NULL,
         warning(sprintf("Regseqp to Uniprot conversion failed for %s %s %s ...\n",
                         refseqp[1], refseqp[2], refseqp[3]))
         uniprot = refseqp
+    }
+    if(any(is.na(uniprot))){
+        uniprot[which(is.na(uniprot))] = refseqp[which(is.na(uniprot))]
     }
     return(uniprot)
   # Output is a vector of same length. Unmapped IDs as NA
@@ -224,36 +250,27 @@ refseqp.to.uniprot <- function(refseqp=NULL,
 #' @examples
 #' ids.to.uniprot(c("VHL","PBRM1","BRCA1","TP53"))
 #' ids.to.uniprot(c("ENSG00000175793","ENSG00000170027"))
-ids.to.uniprot <- function(ids=NULL,id.con.set=id.conversion.set){
-  temp <- ids
-  if(any(ids%in%id.con.set[,2])){
-    print(paste("Either all your IDs are in uniprot format, or they are in different formats"))
-    temp <- ids
-  }else if(any(ids%in%id.con.set[,1])){
-    print(paste("Converting IDs from Entrez to Uniprot"))
-    if(.Platform$OS.type!="windows"){
-      num.cores=detectCores()
-      temp <- mclapply(ids,function(x){return(as.character(id.conversion.set[which(id.con.set[,1]%in%x),2])[1])},mc.cores=num.cores)
-    }else{
-      temp <- sapply(ids,function(x){return(as.character(id.conversion.set[which(id.con.set[,1]%in%x),2])[1])})
+ids.to.uniprot = function(ids=NULL, id.con.set=id.conversion.set){
+    temp = ids
+    if(any(ids%in%id.con.set[,2])){
+        print(paste("Either all your IDs are in uniprot format, or they are in different formats"))
+        temp = ids
+    }else if(any(ids%in%id.con.set[,1])){
+        print(paste("Converting IDs from Entrez to Uniprot"))
+        temp = entrez.to.uniprot(ids)
+    }else if(any(ids%in%id.con.set[,3])){
+        print(paste("Converting IDs from HGNC to Uniprot"))
+        temp = hgnc.to.uniprot(ids)
+    }else if(any(ids%in%id.con.set[,4])){
+        print(paste("Converting IDs from ENSEMBL to Uniprot"))
+        temp = ensembl.to.uniprot(ids)
+    }else if(any(ids%in%id.con.set[,5])){
+        temp = refseqp.to.uniprot(ids)
     }
-  }else if(any(ids%in%id.con.set[,3])){
-    print(paste("Converting IDs from HGNC to Uniprot"))
-    temp <- hgnc.to.uniprot(ids)
-  }else if(any(ids%in%id.con.set[,4])){
-    print(paste("Converting IDs from ENSEMBL to Uniprot"))
-    if(.Platform$OS.type!="windows"){
-      num.cores=detectCores()
-      temp <- mclapply(ids,function(x){return(as.character(id.con.set[which(id.con.set[,4]%in%x),2])[1])},mc.cores=num.cores)
-    }else{
-      temp <- sapply(ids,function(x){return(as.character(id.con.set[which(id.con.set[,4]%in%x),2])[1])})
+    if(all(temp==ids)){
+        stop("Unsuccessful Attempt for ID conversion. Consult the documentation.")
     }
-  }
-  if(all(temp==ids)){
-    stop("Unsuccessful Attempt for ID conversion. Consult the documentation.")
-  }
-  return(temp)
-  ### Returns a character string of uniprot IDs or ""
+    return(temp)
 }
 
 #' Mutation Matrix ID Conversion
@@ -265,51 +282,51 @@ ids.to.uniprot <- function(ids=NULL,id.con.set=id.conversion.set){
 #' @return This function finds uniprot IDs, removes rows without uniprot ID or duplicate uniprot ID
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
-snv.id.conversion <- function(snv=NULL
+snv.id.conversion = function(snv=NULL
                               ### a character matrix with row names as either uniprot IDs or gene symbols or entrez IDs or ensemble gene Ids.
                               ###If there is no mutation in an entry of matrix, it should be NA and if there is a mutation it can be any character.
                               ,id.con.set=id.conversion.set
                               ### a dataframe generated from acquire.ids()
 ){
-  id.conversion.set <- id.con.set
-  snv.rn <- ids.to.uniprot(rownames(snv)) ## converting snv rownames to uniprot
+  id.conversion.set = id.con.set
+  snv.rn = ids.to.uniprot(rownames(snv)) ## converting snv rownames to uniprot
   if(any(is.na(snv.rn))){
-    snv <- snv[-which(is.na(snv.rn)),]
-    snv.rn <- snv.rn[-which(is.na(snv.rn))]
+    snv = snv[-which(is.na(snv.rn)),]
+    snv.rn = snv.rn[-which(is.na(snv.rn))]
   }
   for(j in 1:dim(snv)[2]){
-    snv[,j] <- as.character(snv[,j])
+    snv[,j] = as.character(snv[,j])
   }
   if(any(duplicated(snv.rn))){
-    snv[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F)),] <-
+    snv[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F)),] =
       t(sapply(snv.rn[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F))],function(x){
-        index <- which(snv.rn%in%x)
-        temp <- as.character(apply(snv[index,],2,function(y){
+        index = which(snv.rn%in%x)
+        temp = as.character(apply(snv[index,],2,function(y){
           return(paste(y,collapse="|"))
         }))
       }))
-    snv <- snv[-which(duplicated(snv.rn)),]
-    snv.rn <- snv.rn[-which(duplicated(snv.rn))]
+    snv = snv[-which(duplicated(snv.rn)),]
+    snv.rn = snv.rn[-which(duplicated(snv.rn))]
   }
-  rownames(snv) <- snv.rn
+  rownames(snv) = snv.rn
   if(any(grepl("NA|",snv[,1]))){
     i=grep("NA|",snv[,1])
-    snv[i,] <- apply(snv[i,],c(1,2),function(x){
-      temp <- unlist(strsplit(as.character(x),"|",T))
+    snv[i,] = apply(snv[i,],c(1,2),function(x){
+      temp = unlist(strsplit(as.character(x),"|",T))
       if(any(grepl("NA",temp))){
-        temp <- temp[-which(temp=="NA")]
+        temp = temp[-which(temp=="NA")]
       }
       if(length(temp)!=0){
-        temp <- paste(temp,collapse="|")
+        temp = paste(temp,collapse="|")
       }else{
-        temp <- NA
+        temp = NA
       }
       return(temp)
     })
     for(j in 1:dim(snv)[2]){
       if(any(grepl("NA",snv[,j]))){
         i=grep("NA",snv[,j])
-        snv[i,j][which(snv[i,j]=="NA")] <- NA
+        snv[i,j][which(snv[i,j]=="NA")] = NA
       }
     }
   }
@@ -327,37 +344,48 @@ snv.id.conversion <- function(snv=NULL
 #' @return This function finds uniprot IDs, removes rows without uniprot ID or duplicate uniprot ID while averaging values
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
-rna.id.conversion <- function(rna=NULL,
+rna.id.conversion = function(rna=NULL,
                               ###a numeric matrix with rownames either as gene symbols, ensemble genes IDs, entrez IDs or uniprot IDs.
                               ###Column names should be the same as mutation matrix accompanied with "T" or "N" specifying the tissue.
                               ###If there are "T"s or "N"s in the name of samples, they should be changed before using the function.
                               ###If the samples are not paired, Normal samples can have different names but must be accompanied with "N"
                               id.con.set=id.conversion.set
 ){
-  id.conversion.set <- id.con.set
+  id.conversion.set = id.con.set
   if(length(which(apply((rna==0),1,all)))>0){
-    rna <- rna[-which(apply((rna==0),1,all)),]
+    rna = rna[-which(apply((rna==0),1,all)),]
   }
-  averiger <- function(x,rna.rn,rna){
+  averiger = function(x,rna.rn,rna){
     i=which(rna.rn%in%x)
     return(as.numeric(apply(rna[i,],2,mean)))
   }
-  rna.rn <- ids.to.uniprot(rownames(rna))
+  rna.rn = ids.to.uniprot(rownames(rna))
   if(any(is.na(rna.rn))){
-    rna <- rna[-which(is.na(rna.rn)),]
-    rna.rn <- rna.rn[-which(is.na(rna.rn))]
+    rna = rna[-which(is.na(rna.rn)),]
+    rna.rn = rna.rn[-which(is.na(rna.rn))]
   }
   if(any(duplicated(rna.rn))){
-    rna[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE)),] <-
+    rna[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE)),] =
       t(sapply(rna.rn[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE))],function(x){
         return(averiger(x=x,rna=rna,rna.rn=rna.rn))}))
-    rna <- rna[-which(duplicated(rna.rn)),]
-    rna.rn <- rna.rn[-which(duplicated(rna.rn))]
+    rna = rna[-which(duplicated(rna.rn)),]
+    rna.rn = rna.rn[-which(duplicated(rna.rn))]
   }
-  rownames(rna) <- rna.rn
+  rownames(rna) = rna.rn
   return(rna)
   ### an appropriate matrix of expression for abhac analysis
 }
+
+##################################################
+##  Two scripts for creating permuted networks  ##
+##################################################
+
+
+
+
+#################################################
+##  AbHAC Fisher's exact test motor function   ##
+#################################################
 
 
 #' AbHAC Internal Enrichment Calculator
@@ -372,7 +400,7 @@ rna.id.conversion <- function(rna=NULL,
 #' @return A dataframe with Benjamini-Hochberg FDR bases on fisher's one tail exact test for all enrichment categories for all proteins that interact with at least one of the input proteins
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
-Integrator <- function(ppi.database=NULL,
+Integrator = function(ppi.database=NULL,
                        ### dataframe of whole human protein interaction network that can be obtained from protein.database.creator()
                        list.categories=NULL,
                        ### a list with 7 vectors  or lists of characters as described by enrichment categories
@@ -390,79 +418,79 @@ Integrator <- function(ppi.database=NULL,
   if(is.null(id.conversion.set)){
     id.conversion.set = AbHAC::id.conversion.set
   }
-  Random.ppi <- AbHAC::Random.ppis
-  ppi.lists <- c(Random.ppi,list(ppi.database))    
-  list.results <- list()
+  Random.ppi = AbHAC::Random.ppis
+  ppi.lists = c(Random.ppi,list(ppi.database))    
+  list.results = list()
   for(l in 1:length(list.categories)){
     ###Fina all the proteins that interact with at least one of the proteins in list.categories[[i]]
-    list.pvalues <- vector('list',11)
+    list.pvalues = vector('list',11)
     if(grepl("ermut",fisher.fdr)){
       start.p = 1
     }else{
       start.p=11
     }
     for(p in start.p:11){
-      ppi.dat <- ppi.lists[[p]]
-      case <- list.categories[[l]]
+      ppi.dat = ppi.lists[[p]]
+      case = list.categories[[l]]
       if(is.list(case)){
         for(z in 1:length(case)){
-          case[[z]] <- intersect(fac,case[[z]])
+          case[[z]] = intersect(fac,case[[z]])
         }
-        all.case <- unique(unlist(lapply(case,function(x){return(x)}))) #
-        possible.prs <- unique(union(ppi.dat[which(ppi.dat[,1]%in%case[[1]]),2],
+        all.case = unique(unlist(lapply(case,function(x){return(x)}))) #
+        possible.prs = unique(union(ppi.dat[which(ppi.dat[,1]%in%case[[1]]),2],
                                      ppi.dat[which(ppi.dat[,2]%in%case[[1]]),1])) ##all proteins interacting with first list
-        temp.ppi <- ppi.dat[which(ppi.dat[,1]%in%possible.prs),] ##ppi dataframe of these prs
-        temp.ppi.2 <- ppi.dat[which(ppi.dat[,2]%in%possible.prs),] ##ppi dataframe of these prs
-        temp.ppi.2 <- temp.ppi.2[,2:1] 
-        colnames(temp.ppi.2) <- colnames(temp.ppi)
-        temp.ppi <- rbind(temp.ppi,temp.ppi.2)
-        reference.proteins <- unique(union(temp.ppi[which(temp.ppi[,1]%in%case[[2]]),2],
+        temp.ppi = ppi.dat[which(ppi.dat[,1]%in%possible.prs),] ##ppi dataframe of these prs
+        temp.ppi.2 = ppi.dat[which(ppi.dat[,2]%in%possible.prs),] ##ppi dataframe of these prs
+        temp.ppi.2 = temp.ppi.2[,2:1] 
+        colnames(temp.ppi.2) = colnames(temp.ppi)
+        temp.ppi = rbind(temp.ppi,temp.ppi.2)
+        reference.proteins = unique(union(temp.ppi[which(temp.ppi[,1]%in%case[[2]]),2],
                                            temp.ppi[which(temp.ppi[,2]%in%case[[2]]),1])) ##those proteins in previous ppi dataframe interacting with list 2
         if(length(case)>2){
-          temp.ppi.3 <- temp.ppi[which(temp.ppi[,1]%in%reference.proteins),]
-          temp.ppi.2 <- temp.ppi[which(temp.ppi[,2]%in%reference.proteins),]
-          temp.ppi.2 <- temp.ppi.2[,2:1]
-          colnames(temp.ppi.2) <- colnames(temp.ppi)
-          temp.ppi.3 <- rbind(temp.ppi.3,temp.ppi.2)
-          reference.proteins <- unique(union(temp.ppi.3[which(temp.ppi.3[,1]%in%case[[3]]),2],temp.ppi.3[which(temp.ppi.3[,2]%in%case[[3]]),1]))
+          temp.ppi.3 = temp.ppi[which(temp.ppi[,1]%in%reference.proteins),]
+          temp.ppi.2 = temp.ppi[which(temp.ppi[,2]%in%reference.proteins),]
+          temp.ppi.2 = temp.ppi.2[,2:1]
+          colnames(temp.ppi.2) = colnames(temp.ppi)
+          temp.ppi.3 = rbind(temp.ppi.3,temp.ppi.2)
+          reference.proteins = unique(union(temp.ppi.3[which(temp.ppi.3[,1]%in%case[[3]]),2],temp.ppi.3[which(temp.ppi.3[,2]%in%case[[3]]),1]))
         }
-        case <- all.case
+        case = all.case
       }else{
-        case <- intersect(case,fac)
+        case = intersect(case,fac)
         reference.proteins = unique(union(ppi.dat[which(ppi.dat[,1]%in%case),2],ppi.dat[which(ppi.dat[,2]%in%case),1]))
       }
       if(.Platform$OS.type!="windows"){
         num.cores=detectCores()
-        system.time(df <- unlist(mclapply(reference.proteins,function(protein){
-          interactors <- unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
+        system.time(df = unlist(mclapply(reference.proteins,function(protein){
+          interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
                                       as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
           A=length(intersect(interactors,case))##interactors of protein in category l
           C=length(setdiff(case,interactors))##genes of category l not among interactors
           B=length(setdiff(interactors,case))##interactors not in category i
           D=length(unique(union(ppi.dat[,1],ppi.dat[,2]))) - (A+B+C)
-          p.value <- fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
-          result <- p.value
+          p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
+          result = p.value
           return(result)
         },mc.cores=6)))
-        df <- data.frame(reference.proteins,as.numeric(df))
+        df = data.frame(reference.proteins,as.numeric(df))
       }else{
-        df <- sapply(reference.proteins,function(protein){
-          interactors <- unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
+        df = sapply(reference.proteins,function(protein){
+          interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
                                       as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
           A=length(intersect(interactors,case))##interactors of protein in category l
           C=length(setdiff(case,interactors))##genes of category l not among interactors
           B=length(setdiff(interactors,case))##interactors not in category i
           D=length(fac) - (A+B+C)
-          p.value <- fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
-          result <- p.value
+          p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
+          result = p.value
           return(result)
         })
-        df <- data.frame(reference.proteins,as.numeric(df))
+        df = data.frame(reference.proteins,as.numeric(df))
       }
-      colnames(df) <- c("Protein",paste("P.Value",names(list.categories)[l],sep="_"))
-      df <- as.data.frame(df)
-      df[,2] <- as.numeric(df[,2])
-      list.pvalues[[p]] <- df
+      colnames(df) = c("Protein",paste("P.Value",names(list.categories)[l],sep="_"))
+      df = as.data.frame(df)
+      df[,2] = as.numeric(df[,2])
+      list.pvalues[[p]] = df
     }
     if(grepl("ermut",fisher.fdr)){
       FDR.lists = rep(NA,10)
@@ -493,14 +521,14 @@ Integrator <- function(ppi.database=NULL,
         FDR.lists[index.fdr.lists] = cutoff
         index.fdr.lists = index.fdr.lists+1
       }
-      df <- list.pvalues[[11]]
+      df = list.pvalues[[11]]
       if(any(is.na(FDR.lists))){
         warning('Something was wrong in FDR permutation, NA was generated for at least one of the permuted networks, but excluded')
-        FDR.lists <- FDR.lists[-which(is.na(FDR.lists))]
+        FDR.lists = FDR.lists[-which(is.na(FDR.lists))]
       }
       cutoff=median(FDR.lists)
-      df$FDR <- 1
-      df$FDR[which(df[,2]<=cutoff)] <- 0
+      df$FDR = 1
+      df$FDR[which(df[,2]<=cutoff)] = 0
     }else{
       PVALS=list.pvalues[[11]][,2]
       P.ADJ = p.adjust(PVALS,method=fisher.fdr)
@@ -511,38 +539,38 @@ Integrator <- function(ppi.database=NULL,
       }
     }
     print(paste("Cutoff Determined by",fisher.fdr,"Method is:",cutoff))
-    list.results <- c(list.results,list(df))
+    list.results = c(list.results,list(df))
   }
-  names(list.results) <- names(list.categories)
+  names(list.results) = names(list.categories)
   ###
-  all.genes <- unique(unlist(lapply(list.results,function(x){
+  all.genes = unique(unlist(lapply(list.results,function(x){
     return(as.character(x[,1]))
   })))
-  result <- data.frame(all.genes)
-  colnames(result) <- "Protein"
-  temp.tbl <- matrix(1,nrow=length(all.genes),ncol=length(list.results))
-  colnames(temp.tbl) <- paste("FDR",names(list.results),sep="")
+  result = data.frame(all.genes)
+  colnames(result) = "Protein"
+  temp.tbl = matrix(1,nrow=length(all.genes),ncol=length(list.results))
+  colnames(temp.tbl) = paste("FDR",names(list.results),sep="")
   for(j in 1:length(colnames(temp.tbl))){
-    list.temp <- list.results[[j]]
-    ord.ind <- numeric()
+    list.temp = list.results[[j]]
+    ord.ind = numeric()
     for(J in 1:nrow(list.temp)){
-      ord.ind <- c(ord.ind,which(result[,1]%in%list.temp[J,1]))
+      ord.ind = c(ord.ind,which(result[,1]%in%list.temp[J,1]))
     }
-    temp.tbl[ord.ind,j] <- list.temp[,3]
+    temp.tbl[ord.ind,j] = list.temp[,3]
   }
-  result <- cbind(result,temp.tbl)
-  temp.tbl <- matrix(1,nrow=length(all.genes),ncol=length(list.results))
-  colnames(temp.tbl) <- paste("p.value",names(list.results),sep="")
+  result = cbind(result,temp.tbl)
+  temp.tbl = matrix(1,nrow=length(all.genes),ncol=length(list.results))
+  colnames(temp.tbl) = paste("p.value",names(list.results),sep="")
   for(j in 1:length(colnames(temp.tbl))){
-    list.temp <- list.results[[j]]
-    ord.ind <- numeric()
+    list.temp = list.results[[j]]
+    ord.ind = numeric()
     for(J in 1:nrow(list.temp)){
-      ord.ind <- c(ord.ind,which(result[,1]%in%list.temp[J,1]))
+      ord.ind = c(ord.ind,which(result[,1]%in%list.temp[J,1]))
     }
-    temp.tbl[ord.ind,j] <- list.temp[,2]
+    temp.tbl[ord.ind,j] = list.temp[,2]
   }
-  result <- cbind(result,temp.tbl)
-  result$HGNC <- uniprot.to.hgnc(result[,1])
+  result = cbind(result,temp.tbl)
+  result$HGNC = uniprot.to.hgnc(result[,1])
   return(result)
   ###Output is is a dataframe listing FDRs for each protein in each enrichment category
 }
@@ -558,7 +586,7 @@ Integrator <- function(ppi.database=NULL,
 #' @return a list with 3 string vectors: de.up, de.down and de
 #' @export
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
-deizer <- function(rna=NULL,
+deizer = function(rna=NULL,
                    ###a numeric matrix with rownames either as gene symbols, ensemble genes IDs, entrez IDs or uniprot IDs.
                    ###Column names should be the same as mutation matrix accompanied with "T" or "N" specifying the tissue.
                    ###If there are "T"s or "N"s in the name of samples, they should be changed before using the function.
@@ -587,69 +615,69 @@ deizer <- function(rna=NULL,
   if(is.null(i)|is.null(paired)|is.null(rna)|is.null(expression.method)){
     stop("Please enter valid arguments for the function")
   }
-  rna <- rna[which(rownames(rna)%in%fac),]
+  rna = rna[which(rownames(rna)%in%fac),]
   if(expression.method=="Microarray"){
     if(paired) {
-      index <- 1:length(i)*2
+      index = 1:length(i)*2
       z=1
       for(test in 1:length(i)) {
-        index[(z:(z+1))] <- grep(colnames(snv)[test],colnames(rna))
+        index[(z:(z+1))] = grep(colnames(snv)[test],colnames(rna))
         z=z+2
       }
-      x <- rna[,index]
-      patient.stat <- rep(1:(length(index)/2),2)
+      x = rna[,index]
+      patient.stat = rep(1:(length(index)/2),2)
       status=rep(1,length(colnames(x)))
-      status[grep("N",colnames(x))] <- 2
-      design <- model.matrix(~patient.stat+status)
+      status[grep("N",colnames(x))] = 2
+      design = model.matrix(~patient.stat+status)
     } else  {
-      index <- which(gsub("T","",colnames(rna))%in% colnames(snv)[i])
-      x <- rna[ , c(index,grep("N",colnames(rna)))]
+      index = which(gsub("T","",colnames(rna))%in% colnames(snv)[i])
+      x = rna[ , c(index,grep("N",colnames(rna)))]
       status=rep(1, length(colnames(x)))
-      status[grep("N",colnames(x))] <- 2
-      design <- model.matrix(~ 0+factor(status))
+      status[grep("N",colnames(x))] = 2
+      design = model.matrix(~ 0+factor(status))
     }        
-    colnames(design) <- c("Tumor","Normal")
-    fit <- lmFit(x,design)
-    contrast.matrix <- makeContrasts(Tumor-Normal,levels=design)
-    fit2 <- contrasts.fit(fit,contrast.matrix)
-    fit2 <- treat(fit2,lfc=1)
-    deg <- topTreat(fit2,number=Inf)
-    deg$adj <- p.adjust(deg$P.Value,method=correction.method)
-    de.up <- rownames(deg)[which(deg$adj<=fdr.cutoff & deg$logFC>0)]
-    de.down <- rownames(deg)[which(deg$adj<=fdr.cutoff & deg$logFC<0)]
-    de <- union(de.up,de.down)
+    colnames(design) = c("Tumor","Normal")
+    fit = lmFit(x,design)
+    contrast.matrix = makeContrasts(Tumor-Normal,levels=design)
+    fit2 = contrasts.fit(fit,contrast.matrix)
+    fit2 = treat(fit2,lfc=1)
+    deg = topTreat(fit2,number=Inf)
+    deg$adj = p.adjust(deg$P.Value,method=correction.method)
+    de.up = rownames(deg)[which(deg$adj<=fdr.cutoff & deg$logFC>0)]
+    de.down = rownames(deg)[which(deg$adj<=fdr.cutoff & deg$logFC<0)]
+    de = union(de.up,de.down)
     
   } else if (expression.method=="RNAseq") {
     if(paired) {
-      index <- 1:length(i)*2
+      index = 1:length(i)*2
       z=1
       for(test in 1:length(i)){
-        index[(z:(z+1))] <- grep(colnames(snv)[test],colnames(rna))
+        index[(z:(z+1))] = grep(colnames(snv)[test],colnames(rna))
         z=z+2
       }
-      x <- rna[,index]
+      x = rna[,index]
     }else {
-      index <- which(gsub("T","",colnames(rna))%in%colnames(snv)[i])
-      x <- rna[,c(index,grep("N",colnames(rna)))]
+      index = which(gsub("T","",colnames(rna))%in%colnames(snv)[i])
+      x = rna[,c(index,grep("N",colnames(rna)))]
       ##BECAREFUL, NOT COMPLETE FOR PAIRED SAMPLES
     }
-    group <- rep(2,length(colnames(x)))
-    group[grep("N",colnames(x))] <- 1
-    group <- factor(group)
-    y <- DGEList(counts=x,group=group)
-    y <- calcNormFactors(y)
-    y <- estimateCommonDisp(y)
-    y <- estimateTagwiseDisp(y)
-    et <- exactTest(y)
-    table <- et$table
-    table$FDR <- p.adjust(table$PValue,method=correction.method)
-    table <- table[which(table$FDR<=fdr.cutoff),]
-    de.up <- rownames(table)[which(table[,1]>=1)]
-    de.down <- rownames(table)[which(table[,1]<=(-1))]
-    de <- union(de.up,de.down)
+    group = rep(2,length(colnames(x)))
+    group[grep("N",colnames(x))] = 1
+    group = factor(group)
+    y = DGEList(counts=x,group=group)
+    y = calcNormFactors(y)
+    y = estimateCommonDisp(y)
+    y = estimateTagwiseDisp(y)
+    et = exactTest(y)
+    table = et$table
+    table$FDR = p.adjust(table$PValue,method=correction.method)
+    table = table[which(table$FDR<=fdr.cutoff),]
+    de.up = rownames(table)[which(table[,1]>=1)]
+    de.down = rownames(table)[which(table[,1]<=(-1))]
+    de = union(de.up,de.down)
   }
   result=list(de.up,de.down,de)
-  names(result) <- c("de.up","de.down","de")
+  names(result) = c("de.up","de.down","de")
   print(paste("Differential Expression Analysis Successful",Sys.time()))
   return(result)
   ### a list with upregulated proteins, downregulated proteins, and all differentially expressed proteins
@@ -680,7 +708,7 @@ deizer <- function(rna=NULL,
 #' set.abhac.result = set.abhac(snv=snv,rna=rna,fac=fac,expression.method="Microarray",rna.paired=FALSE,
 #'    fdr.cutoff=0.05,correction.method="BH",enrichment.categories=c("snv.de","de.up"),
 #'    ppi.database=ppi.database[,1:2],id.conversion.set=id.conversion.set)
-set.abhac <- function(ppi.database=NULL,
+set.abhac = function(ppi.database=NULL,
                      ### dataframe of whole human protein interaction network that can be obtained from protein.database.creator()
                      rna=NULL,
                      ###a numeric matrix with rownames either as gene symbols, ensemble genes IDs, entrez IDs or uniprot IDs.
@@ -707,13 +735,13 @@ set.abhac <- function(ppi.database=NULL,
                      fisher.fdr.cutoff=0.05
 ){
   if(is.null(ppi.database)){
-    ppi.database <- AbHAC::ppi.database[,1:2]
+    ppi.database = AbHAC::ppi.database[,1:2]
   }
   if(is.null(fac)){
-    fac <- AbHAC::fac
+    fac = AbHAC::fac
   }
   if(is.null(id.conversion.set)){
-    id.conversion.set <- AbHAC::id.conversion.set
+    id.conversion.set = AbHAC::id.conversion.set
   }
   if(is.null(rna) & is.null(snv)){
     stop("Please make sure all the arguments of the function are entered correctly")
@@ -729,17 +757,17 @@ set.abhac <- function(ppi.database=NULL,
     } 
     if(!any(rownames(rna)%in%id.conversion.set[,2])){
       print(paste("rna matrix IDs are not uniprot, trying for conversion, averiging duplicates, removing those without IDs"))
-      rna <- rna.id.conversion(rna,id.conversion.set)
+      rna = rna.id.conversion(rna,id.conversion.set)
     }
   }
   if(!is.null(snv)){
     if(!any(rownames(snv)%in%id.conversion.set[,2])){
       print(paste("snv matrix IDs are not uniprot, trying for conversion, averiging duplicates, removing those without IDs"))
-      snv <- snv.id.conversion(snv,id.conversion.set)
+      snv = snv.id.conversion(snv,id.conversion.set)
     }
   }
   if(is.null(clinical)){
-    clinical <- data.frame(Patient=colnames(snv),Status="Tumor")
+    clinical = data.frame(Patient=colnames(snv),Status="Tumor")
   }
   #based on de method, find differentially expressed genes
   grs = unique(clinical[,2])
@@ -750,28 +778,28 @@ set.abhac <- function(ppi.database=NULL,
     cat(paste("Performing AbHAC analysis for:", gr, "\n"))
     i=which(clinical[,2]==gr)
     if(!is.null(rna)){
-      DE <- deizer(rna=rna,correction.method=correction.method,
+      DE = deizer(rna=rna,correction.method=correction.method,
 		paired=rna.paired,expression.method=expression.method,
 		i=i,fdr.cutoff=fdr.cutoff,
 		fac=fac)
-      de.up <- DE$de.up
-      de.down <- DE$de.down
-      de <- DE$de
+      de.up = DE$de.up
+      de.down = DE$de.down
+      de = DE$de
     }
     if(!is.null(snv)){
-      SNV <- rownames(snv)[apply(!is.na(snv[,i]),1,sum)>0]
+      SNV = rownames(snv)[apply(!is.na(snv[,i]),1,sum)>0]
     }
-    list.categories <- list()
+    list.categories = list()
     if(!is.null(snv) & !is.null(rna)){
-      list.categories[[1]] <- c(list(SNV),list(de.up),list(de.down))
-      list.categories[[2]] <- de.up
-      list.categories[[3]] <- de.down
-      list.categories[[4]] <- union(de.up,de.down)
-      list.categories[[5]] <- SNV
-      list.categories[[6]] <- c(list(SNV),list(de.up))
-      list.categories[[7]] <- c(list(SNV),list(de.down))
-      list.categories[[8]] <- c(list(SNV),list(de))
-      names(list.categories) <- c("snv.de.up.de.down","de.up","de.down",
+      list.categories[[1]] = c(list(SNV),list(de.up),list(de.down))
+      list.categories[[2]] = de.up
+      list.categories[[3]] = de.down
+      list.categories[[4]] = union(de.up,de.down)
+      list.categories[[5]] = SNV
+      list.categories[[6]] = c(list(SNV),list(de.up))
+      list.categories[[7]] = c(list(SNV),list(de.down))
+      list.categories[[8]] = c(list(SNV),list(de))
+      names(list.categories) = c("snv.de.up.de.down","de.up","de.down",
                                 "de","snv","snv.de.up","snv.de.down","snv.de")
     }else if(!is.null(snv)){
       list.categories = list(snv=SNV)
@@ -780,17 +808,17 @@ set.abhac <- function(ppi.database=NULL,
         de.down = de.down,
         de = de)
     }
-    index.cat <- numeric()
+    index.cat = numeric()
     for(z in 1:length(enrichment.categories)){
-      index.cat <- c(index.cat,which(names(list.categories)%in%enrichment.categories[z]))
+      index.cat = c(index.cat,which(names(list.categories)%in%enrichment.categories[z]))
     }
-    list.categories <- list.categories[index.cat] 
-    list.categories <- list.categories[which(names(list.categories)%in%enrichment.categories)]
+    list.categories = list.categories[index.cat] 
+    list.categories = list.categories[which(names(list.categories)%in%enrichment.categories)]
     if(length(enrichment.categories)!=length(list.categories)){
       stop("Make sure proper enrichment categories are queried according to the provided datasets")
     }
     ## Local Function that gets snv.in, de.up, de.down, de and SNV and returns a dataframe of results
-    abhac <- Integrator(ppi.database=ppi.database, list.categories=list.categories,
+    abhac = Integrator(ppi.database=ppi.database, list.categories=list.categories,
 	fac=fac, fisher.fdr=fisher.fdr,
 	fisher.fdr.cutoff=fisher.fdr.cutoff)
     list.abhacs[[lcind]] = abhac
@@ -825,7 +853,7 @@ set.abhac <- function(ppi.database=NULL,
 #' data(id.conversion.set) 
 #' data(fac) #vector of all proteins in ppi.database
 #' abhac.brief.result = abhac.brief(de.up,de.down,fac=fac,snv=snv,enrichment.categories=c("snv.de","de.up"),ppi.database=ppi.database[,1:2],id.conversion.set=id.conversion.set)
-abhac.brief <- function(de.up=NULL,
+abhac.brief = function(de.up=NULL,
                        ### Uniprot acession ID of upregulated genes
                        de.down=NULL,
                        ### Uniprot accession ID of downregulated proteins
@@ -842,13 +870,13 @@ abhac.brief <- function(de.up=NULL,
     stop("Please make sure the 3 main variables (de.up, de.down, snv) are entered correctly")
   }
   if(is.null(ppi.database)){
-    ppi.database <- AbHAC::ppi.database[,1:2]
+    ppi.database = AbHAC::ppi.database[,1:2]
   }
   if(is.null(id.conversion.set)){
-    id.conversion.set <- AbHAC::id.conversion.set
+    id.conversion.set = AbHAC::id.conversion.set
   }
   if(is.null(fac)){
-    fac <- AbHAC::fac
+    fac = AbHAC::fac
   }
   if(!is.null(de.up)){
     if(length(intersect(de.up, id.conversion.set[,2]))==0){
@@ -866,25 +894,25 @@ abhac.brief <- function(de.up=NULL,
     }
   }
 
-  id.conversion.set. <- id.conversion.set
-  list.categories <- list()
-  list.categories[[1]] <- c(list(snv),list(de.up),list(de.down))
-  list.categories[[2]] <- de.up
-  list.categories[[3]] <- de.down
-  list.categories[[4]] <- union(de.up,de.down)
-  list.categories[[5]] <- snv
-  list.categories[[6]] <- c(list(snv),list(de.up))
-  list.categories[[7]] <- c(list(snv),list(de.down))
-  list.categories[[8]] <- c(list(snv),list(union(de.up,de.down)))
-  names(list.categories) <- c("snv.de.up.de.down","de.up","de.down",
+  id.conversion.set. = id.conversion.set
+  list.categories = list()
+  list.categories[[1]] = c(list(snv),list(de.up),list(de.down))
+  list.categories[[2]] = de.up
+  list.categories[[3]] = de.down
+  list.categories[[4]] = union(de.up,de.down)
+  list.categories[[5]] = snv
+  list.categories[[6]] = c(list(snv),list(de.up))
+  list.categories[[7]] = c(list(snv),list(de.down))
+  list.categories[[8]] = c(list(snv),list(union(de.up,de.down)))
+  names(list.categories) = c("snv.de.up.de.down","de.up","de.down",
                               "de","snv","snv.de.up","snv.de.down","snv.de")
-  index.cat <- numeric()
+  index.cat = numeric()
   for(z in 1:length(enrichment.categories)){
-    index.cat <- c(index.cat,which(names(list.categories)%in%enrichment.categories[z]))
+    index.cat = c(index.cat,which(names(list.categories)%in%enrichment.categories[z]))
   }
-  list.categories <- list.categories[index.cat] 
-  list.categories <- list.categories[which(names(list.categories)%in%enrichment.categories)]
-  abhac <- Integrator(ppi.database=ppi.database[,1:2],list.categories=list.categories,
+  list.categories = list.categories[index.cat] 
+  list.categories = list.categories[which(names(list.categories)%in%enrichment.categories)]
+  abhac = Integrator(ppi.database=ppi.database[,1:2],list.categories=list.categories,
                      fac=fac,id.conversion.set=id.conversion.set. , fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff)
   return(abhac)
   ### Returns a dataframe with each protein, all its interactors, and enrichments in 3 different categories, before and after correction for multiple testing
