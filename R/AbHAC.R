@@ -389,13 +389,7 @@ rna.id.conversion = function(rna=NULL,
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
 get_edgedegree_freq = function(ppi.database, fac){
-    ppi_temp = unique(ppi.database)
-    ppi_temp$AB = paste(ppi_temp[,1], ppi_temp[,2], sep="_")
-    ppi_temp$BA = paste(ppi_temp[,2], ppi_temp[,1], sep="_")
-    # Removing reversed interactions
-    if(any(ppi_temp$BA %in% ppi_temp$AB)){
-        ppi_temp = ppi_temp[-which(ppi_temp$BA %in% ppi_temp$AB), 1:2]
-    }
+    ppi_temp = ppi.database
     vec_freq = table(c(ppi_temp[,1], ppi_temp[,2]))
     df_freq = data.frame(Uniprot=names(vec_freq),
                          Num.Interactions=as.numeric(vec_freq))
@@ -446,9 +440,10 @@ permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=
         # 1. Adding the swap column to existing dataframe df_pr_freq
         select_proteins = df_pr_freq[df_pr_freq$Label.bins==each_label, 1]
         select_proteins = setdiff(select_proteins, df_pr_freq[-which(is.na(df_pr_freq$swap)),1])
-        if(length(select_proteins) > 0){
+        if(length(select_proteins) > 1){
             swap_prs = sample(select_proteins, length(select_proteins), replace=FALSE)
             df_pr_freq[select_proteins, "swap"] = swap_prs
+            df_pr_freq[swap_prs, "swap"] = select_proteins
             # 2. Replacing entries in the network with swap column of df_pr_freq
             in_ppi_1 = ppi.permute[,1] %in% select_proteins
             ppi.permute[in_ppi_1, 1] = sapply(ppi.permute[in_ppi_1, 1], function(each_pr){
@@ -465,6 +460,68 @@ permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=
 ##  AbHAC Fisher's exact test motor function   ##
 #################################################
 
+remove_duplicate_interactions = function(ppi.database){
+    ppi_temp = unique(ppi.database)
+    ppi_temp$AB = paste(ppi_temp[,1], ppi_temp[,2], sep="_")
+    ppi_temp$BA = paste(ppi_temp[,2], ppi_temp[,1], sep="_")
+    # Removing reversed interactions
+    if(any(ppi_temp$BA %in% ppi_temp$AB)){
+        ppi_temp = ppi_temp[-which(ppi_temp$BA %in% ppi_temp$AB), 1:2]
+    }
+    return(ppi_temp)
+}
+
+multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.fdr.cutoff){
+    n.nets = length(list.pvalues)
+    if(fisher.fdr == "Permutation.FDR"){
+        FDR.lists = rep(NA, n.nets)
+        index.fdr.lists = 1
+        ##For each of the Random networks, perform the calculation seperately
+        for(ppi.net in list.pvalues[2:n.nets]){
+            cutoff=0.000
+            min.pval = min(list.pvalues[[1]][,2]) # Minimum p-value in real network
+            fdr="Not Found"
+            pvalues = list.pvalues[[1]][,2] # All p-values in real network 
+            pvalues = sort(pvalues[pvalues<=0.2],TRUE)
+            p.ind = 1
+            while(fdr=="Not Found"){
+                pv.cut=pvalues[p.ind]
+                n.ran = length(which(ppi.net[,2]<=pv.cut))
+                n.act = length(which(list.pvalues[[11]][,2]<=pv.cut))
+                if(is.na(n.ran/n.act) | is.na(n.ran/n.act)){
+                    fdr="Found"
+                }else if( (n.ran/n.act) <= fisher.fdr.cutoff){
+                    fdr="Found"
+                    cutoff = pv.cut
+                }
+                if(min.pval >= pv.cut){
+                    fdr="Found"
+                }
+                  p.ind=p.ind+1
+            }
+            FDR.lists[index.fdr.lists] = cutoff
+            index.fdr.lists = index.fdr.lists+1
+        }
+        df = list.pvalues[[1]]
+        if(any(is.na(FDR.lists))){
+            warning('Something was wrong in FDR permutation, NA was generated for at least one of the permuted networks, but excluded')
+            FDR.lists = FDR.lists[-which(is.na(FDR.lists))]
+        }
+        cutoff=median(FDR.lists)
+        df$FDR = ifelse(df[,2] <= cutoff, 0, 1)
+    }else if(fisher.fdr == "Permutation.FWER"){
+        min.pvalues = lapply(list.pvalues[2:n.nets], min)
+        cutoff = quantile(min.pvalues, fisher.fdr.cutoff)
+        df = list.pvalues[[1]]
+        df$FDR = ifelse(df[,2] <= cutoff, 0, 1)
+    }else{
+        df = list.pvalues[[1]]
+        df$FDR = p.adjust(df[,2], method=fisher.fdr)
+        cutoff = max(which(df[,2]<=fisher.fdr.cutoff))
+    }
+    print(paste("Cutoff Determined by",fisher.fdr,"Method is:",cutoff))
+    return(df)
+}
 
 #' AbHAC Internal Enrichment Calculator
 #' 
@@ -484,173 +541,139 @@ Integrator = function(ppi.database=NULL,
                        ### a list with 7 vectors  or lists of characters as described by enrichment categories
                        fac=NULL,
                        id.conversion.set=NULL,
-                       fisher.fdr="Permutation",
-                       fisher.fdr.cutoff=0.05
-){
-  if(is.null(fac)){
-    fac = AbHAC::fac
-  }
-  if(is.null(ppi.database)){
-    ppi.database = AbHAC::ppi.database[,1:2]
-  }
-  if(is.null(id.conversion.set)){
-    id.conversion.set = AbHAC::id.conversion.set
-  }
-  Random.ppi = AbHAC::Random.ppis
-  ppi.lists = c(Random.ppi,list(ppi.database))    
-  list.results = list()
-  for(l in 1:length(list.categories)){
-    ###Fina all the proteins that interact with at least one of the proteins in list.categories[[i]]
-    list.pvalues = vector('list',11)
-    if(grepl("ermut",fisher.fdr)){
-      start.p = 1
-    }else{
-      start.p=11
+                       fisher.fdr="Permutation.FDR",
+                       fisher.fdr.cutoff=0.05,
+                       ### Parameters to be specified if using permuted method 'Permutation.FDR' or 'Permutation.FWER'
+                       num.permuted.ppi = 10,
+                       method.permuted.ppi = "AsPaper",
+                       bins.permuted.ppi = 4,
+                       num.cores = 6)
+{
+    if(is.null(fac)){
+        fac = AbHAC::fac
     }
-    for(p in start.p:11){
-      ppi.dat = ppi.lists[[p]]
-      case = list.categories[[l]]
-      if(is.list(case)){
-        for(z in 1:length(case)){
-          case[[z]] = intersect(fac,case[[z]])
-        }
-        all.case = unique(unlist(lapply(case,function(x){return(x)}))) #
-        possible.prs = unique(union(ppi.dat[which(ppi.dat[,1]%in%case[[1]]),2],
+    if(is.null(ppi.database)){
+        ppi.database = AbHAC::ppi.database[,1:2]
+    }
+    if(is.null(id.conversion.set)){
+        id.conversion.set = AbHAC::id.conversion.set
+    }
+    # 1. Removing duplicate interactions in any direction
+    ppi.database = remove_duplicate_interactions(ppi.database)
+    # 2. computations will be done on all the protein networks within ppi.lists and will be stored to list.pvalues
+    ppi.lists = list()
+    if(grepl("ermut", fisher.fdr)){
+        ppi.lists = vector("list", (num.permuted.ppi + 1))
+    }
+    ppi.lists[[1]] = ppi.database
+    names(ppi.lists)[1] = "MainNetwork"
+    list.results = list()
+    df_pr_freq = get_edgedegree_freq(ppi.database, fac)
+    for(l in 1:length(list.categories)){
+        ###Fina all the proteins that interact with at least one of the proteins in list.categories[[i]]
+        list.pvalues = foreach(p=1:(num.permuted.ppi + 1) %dopar% {
+            ppi.dat = ppi.lists[[p]]
+            if(is.null(ppi.dat)){
+                ppi.dat = permute_pdr(ppi.database, df_pr_freq, method=method.permuted.ppi, k=bins.permuted.ppi)
+            }
+            case = list.categories[[l]]
+            if(is.list(case)){
+                for(z in 1:length(case)){
+                    case[[z]] = intersect(fac,case[[z]])
+                }
+                all.case = unique(unlist(lapply(case,function(x){return(x)}))) #
+                possible.prs = unique(union(ppi.dat[which(ppi.dat[,1]%in%case[[1]]),2],
                                      ppi.dat[which(ppi.dat[,2]%in%case[[1]]),1])) ##all proteins interacting with first list
-        temp.ppi = ppi.dat[which(ppi.dat[,1]%in%possible.prs),] ##ppi dataframe of these prs
-        temp.ppi.2 = ppi.dat[which(ppi.dat[,2]%in%possible.prs),] ##ppi dataframe of these prs
-        temp.ppi.2 = temp.ppi.2[,2:1] 
-        colnames(temp.ppi.2) = colnames(temp.ppi)
-        temp.ppi = rbind(temp.ppi,temp.ppi.2)
-        reference.proteins = unique(union(temp.ppi[which(temp.ppi[,1]%in%case[[2]]),2],
-                                           temp.ppi[which(temp.ppi[,2]%in%case[[2]]),1])) ##those proteins in previous ppi dataframe interacting with list 2
-        if(length(case)>2){
-          temp.ppi.3 = temp.ppi[which(temp.ppi[,1]%in%reference.proteins),]
-          temp.ppi.2 = temp.ppi[which(temp.ppi[,2]%in%reference.proteins),]
-          temp.ppi.2 = temp.ppi.2[,2:1]
-          colnames(temp.ppi.2) = colnames(temp.ppi)
-          temp.ppi.3 = rbind(temp.ppi.3,temp.ppi.2)
-          reference.proteins = unique(union(temp.ppi.3[which(temp.ppi.3[,1]%in%case[[3]]),2],temp.ppi.3[which(temp.ppi.3[,2]%in%case[[3]]),1]))
+                temp.ppi = ppi.dat[which(ppi.dat[,1]%in%possible.prs),] ##ppi dataframe of these prs
+                temp.ppi.2 = ppi.dat[which(ppi.dat[,2]%in%possible.prs),] ##ppi dataframe of these prs
+                temp.ppi.2 = temp.ppi.2[,2:1] 
+                colnames(temp.ppi.2) = colnames(temp.ppi)
+                temp.ppi = rbind(temp.ppi,temp.ppi.2)
+                reference.proteins = union(
+                    temp.ppi[which(temp.ppi[,1]%in%case[[2]]),2],
+                        temp.ppi[which(temp.ppi[,2]%in%case[[2]]),1]) ##those proteins in previous ppi dataframe interacting with list 2
+                if(length(case)>2){
+                    temp.ppi.3 = temp.ppi[which(temp.ppi[,1]%in%reference.proteins),]
+                    temp.ppi.2 = temp.ppi[which(temp.ppi[,2]%in%reference.proteins),]
+                    temp.ppi.2 = temp.ppi.2[,2:1]
+                    colnames(temp.ppi.2) = colnames(temp.ppi)
+                    temp.ppi.3 = rbind(temp.ppi.3,temp.ppi.2)
+                    reference.proteins = unique(union(temp.ppi.3[which(temp.ppi.3[,1]%in%case[[3]]),2],temp.ppi.3[which(temp.ppi.3[,2]%in%case[[3]]),1]))
+                }
+                case = all.case
+            }else{
+                case = intersect(case,fac)
+                reference.proteins = unique(union(ppi.dat[which(ppi.dat[,1]%in%case),2],ppi.dat[which(ppi.dat[,2]%in%case),1]))
+            }
+            if(.Platform$OS.type!="windows"){
+                num.cores=detectCores()
+                df = unlist(mclapply(reference.proteins,function(protein){
+                    interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
+                                          as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
+                    A=length(intersect(interactors,case))##interactors of protein in category l
+                    C=length(setdiff(case,interactors))##genes of category l not among interactors
+                    B=length(setdiff(interactors,case))##interactors not in category i
+                    D=length(unique(union(ppi.dat[,1],ppi.dat[,2]))) - (A+B+C)
+                    p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
+                    result = p.value
+                    return(result)
+                    },mc.cores=6))
+                df = data.frame(reference.proteins,as.numeric(df))
+            }else{
+                df = sapply(reference.proteins,function(protein){
+                    interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
+                                          as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
+                    A=length(intersect(interactors,case))##interactors of protein in category l
+                    C=length(setdiff(case,interactors))##genes of category l not among interactors
+                    B=length(setdiff(interactors,case))##interactors not in category i
+                    D=length(fac) - (A+B+C)
+                    p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
+                    result = p.value
+                    return(result)
+                    })
+                df = data.frame(reference.proteins,as.numeric(df))
+            }
+            colnames(df) = c("Protein",paste("P.Value",names(list.categories)[l],sep="_"))
+            df = as.data.frame(df)
+            df[,2] = as.numeric(df[,2])
+            list.pvalues[[p]] = df
         }
-        case = all.case
-      }else{
-        case = intersect(case,fac)
-        reference.proteins = unique(union(ppi.dat[which(ppi.dat[,1]%in%case),2],ppi.dat[which(ppi.dat[,2]%in%case),1]))
-      }
-      if(.Platform$OS.type!="windows"){
-        num.cores=detectCores()
-        system.time(df = unlist(mclapply(reference.proteins,function(protein){
-          interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
-                                      as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
-          A=length(intersect(interactors,case))##interactors of protein in category l
-          C=length(setdiff(case,interactors))##genes of category l not among interactors
-          B=length(setdiff(interactors,case))##interactors not in category i
-          D=length(unique(union(ppi.dat[,1],ppi.dat[,2]))) - (A+B+C)
-          p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
-          result = p.value
-          return(result)
-        },mc.cores=6)))
-        df = data.frame(reference.proteins,as.numeric(df))
-      }else{
-        df = sapply(reference.proteins,function(protein){
-          interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
-                                      as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
-          A=length(intersect(interactors,case))##interactors of protein in category l
-          C=length(setdiff(case,interactors))##genes of category l not among interactors
-          B=length(setdiff(interactors,case))##interactors not in category i
-          D=length(fac) - (A+B+C)
-          p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
-          result = p.value
-          return(result)
-        })
-        df = data.frame(reference.proteins,as.numeric(df))
-      }
-      colnames(df) = c("Protein",paste("P.Value",names(list.categories)[l],sep="_"))
-      df = as.data.frame(df)
-      df[,2] = as.numeric(df[,2])
-      list.pvalues[[p]] = df
+        df = multiple.testing.correction.handler(list.pvalues, fisher.fdr, fisher.fdr.cutoff)
+        print(paste("Cutoff Determined by",fisher.fdr,"Method is:",cutoff))
+        list.results = c(list.results,list(df))
     }
-    if(grepl("ermut",fisher.fdr)){
-      FDR.lists = rep(NA,10)
-      index.fdr.lists = 1
-      ##For each of the Random networks, perform the calculation seperately
-      for(ppi.net in list.pvalues[1:10]){
-        cutoff=0.000
-        min.pval = min(list.pvalues[[11]][,2])
-        fdr="Not Found"
-        pvalues = list.pvalues[[11]][,2]
-        pvalues = sort(pvalues[pvalues<=0.2],TRUE)
-        p.ind = 1
-        while(fdr=="Not Found"){
-          pv.cut=pvalues[p.ind]
-          n.ran = length(which(ppi.net[,2]<=pv.cut))
-          n.act = length(which(list.pvalues[[11]][,2]<=pv.cut))
-          if(is.na(n.ran/n.act) | is.na(n.ran/n.act)){
-            fdr="Found"
-          }else if( (n.ran/n.act) <=fisher.fdr.cutoff){
-            fdr="Found"
-            cutoff = pv.cut
-          }
-          if(min.pval >= pv.cut){
-            fdr="Found"
-          }
-          p.ind=p.ind+1
+    names(list.results) = names(list.categories)
+    ###
+    all.genes = unique(unlist(lapply(list.results,function(x){
+        return(as.character(x[,1]))
+    })))
+    result = data.frame(all.genes)
+    colnames(result) = "Protein"
+    temp.tbl = matrix(1,nrow=length(all.genes),ncol=length(list.results))
+    colnames(temp.tbl) = paste("FDR",names(list.results),sep="")
+    for(j in 1:length(colnames(temp.tbl))){
+        list.temp = list.results[[j]]
+        ord.ind = numeric()
+        for(J in 1:nrow(list.temp)){
+            ord.ind = c(ord.ind,which(result[,1]%in%list.temp[J,1]))
         }
-        FDR.lists[index.fdr.lists] = cutoff
-        index.fdr.lists = index.fdr.lists+1
-      }
-      df = list.pvalues[[11]]
-      if(any(is.na(FDR.lists))){
-        warning('Something was wrong in FDR permutation, NA was generated for at least one of the permuted networks, but excluded')
-        FDR.lists = FDR.lists[-which(is.na(FDR.lists))]
-      }
-      cutoff=median(FDR.lists)
-      df$FDR = 1
-      df$FDR[which(df[,2]<=cutoff)] = 0
-    }else{
-      PVALS=list.pvalues[[11]][,2]
-      P.ADJ = p.adjust(PVALS,method=fisher.fdr)
-      cutoff=max(PVALS[P.ADJ<=fisher.fdr.cutoff])
-      df$FDR=P.ADJ
-      if(cutoff==-Inf){
-        cutoff=0
-      }
+        temp.tbl[ord.ind,j] = list.temp[,3]
     }
-    print(paste("Cutoff Determined by",fisher.fdr,"Method is:",cutoff))
-    list.results = c(list.results,list(df))
-  }
-  names(list.results) = names(list.categories)
-  ###
-  all.genes = unique(unlist(lapply(list.results,function(x){
-    return(as.character(x[,1]))
-  })))
-  result = data.frame(all.genes)
-  colnames(result) = "Protein"
-  temp.tbl = matrix(1,nrow=length(all.genes),ncol=length(list.results))
-  colnames(temp.tbl) = paste("FDR",names(list.results),sep="")
-  for(j in 1:length(colnames(temp.tbl))){
-    list.temp = list.results[[j]]
-    ord.ind = numeric()
-    for(J in 1:nrow(list.temp)){
-      ord.ind = c(ord.ind,which(result[,1]%in%list.temp[J,1]))
+    result = cbind(result,temp.tbl)
+    temp.tbl = matrix(1,nrow=length(all.genes),ncol=length(list.results))
+    colnames(temp.tbl) = paste("p.value",names(list.results),sep="")
+    for(j in 1:length(colnames(temp.tbl))){
+        list.temp = list.results[[j]]
+        ord.ind = numeric()
+        for(J in 1:nrow(list.temp)){
+          ord.ind = c(ord.ind,which(result[,1]%in%list.temp[J,1]))
+        }
+        temp.tbl[ord.ind,j] = list.temp[,2]
     }
-    temp.tbl[ord.ind,j] = list.temp[,3]
-  }
-  result = cbind(result,temp.tbl)
-  temp.tbl = matrix(1,nrow=length(all.genes),ncol=length(list.results))
-  colnames(temp.tbl) = paste("p.value",names(list.results),sep="")
-  for(j in 1:length(colnames(temp.tbl))){
-    list.temp = list.results[[j]]
-    ord.ind = numeric()
-    for(J in 1:nrow(list.temp)){
-      ord.ind = c(ord.ind,which(result[,1]%in%list.temp[J,1]))
-    }
-    temp.tbl[ord.ind,j] = list.temp[,2]
-  }
-  result = cbind(result,temp.tbl)
-  result$HGNC = uniprot.to.hgnc(result[,1])
-  return(result)
-  ###Output is is a dataframe listing FDRs for each protein in each enrichment category
+    result = cbind(result,temp.tbl)
+    result$HGNC = uniprot.to.hgnc(result[,1])
+    return(result)
+    ###Output is is a dataframe listing FDRs for each protein in each enrichment category
 }
 
 #' Differential Expression calculator function
