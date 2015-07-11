@@ -419,13 +419,13 @@ permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=
     ppi.permute = ppi.database[,1:2]
     freq_degrees_vec = table(df_pr_freq[,2])
     if(method == "AsPaper"){
-        rare_indices = as.numeric(names(freq_degrees_vec[freq_degrees_vec < 4]))
+        rare_indices = as.numeric(names(freq_degrees_vec[as.numeric(freq_degrees_vec) < 4]))
         df_pr_freq$Label.bins = as.character(df_pr_freq[,2]) # as.char BCZ some must be replaced
         index_rares = df_pr_freq[,2] %in% rare_indices
+        rank_degrees = rank(df_pr_freq[index_rares, 2], ties.method = "random")
         df_pr_freq$Label.bins[index_rares] = as.character(cut(
-            rank(df_pr_freq[index_rares, 2], ties.method = "random"), k, include.lowest=TRUE, right=TRUE))
+            rank_degrees, breaks = seq(0, max(rank_degrees), length.out=k+1), include.lowest=TRUE))
         df_pr_freq$Label.bins = factor(df_pr_freq$Label.bins)
-        ## Not to self: Currently 121 edge degree has only 2. WHY?
     }else if(method == "ByDegree"){
         rank_degrees = rank(df_pr_freq[,2], ties.method = "min")
         df_pr_freq$Label.bins = cut(rank_degrees, k, include.lowest=TRUE, right=TRUE)
@@ -436,19 +436,29 @@ permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=
     if(verbose){
         cat("Printing the bins of protein edge degrees\nand number of proteins within each bin\n")
         print(table(df_pr_freq$Label.bins))
-        if(any(table(df_pr_freq$Label.bins) > nrow(ppi.database)/2)){
+        if(any(table(df_pr_freq$Label.bins) > nrow(ppi.permute)/2)){
             warning("Be advised that one of the bins includes half the proteins!\nChange the method to 'equal' or 'AsPaper'\n")
         }
     }
     # Using the label created so far, permute proteins inside those labels
+    df_pr_freq$swap = NA
     for(each_label in unique(df_pr_freq$Label.bins)){
-        select_proteins = df[df_pr_freq$Label.bins, 1]
-        df_pr_freq$swap[df_pr_freq$Label.bins] = permutate(
-            select_proteins, length(select_proteins), replace = FALSE)
-        swap_prs = 
-        ppi.database[ppi.database[,1] %in% select_proteins,1] = 
-
+        # 1. Adding the swap column to existing dataframe df_pr_freq
+        select_proteins = df_pr_freq[df_pr_freq$Label.bins==each_label, 1]
+        select_proteins = setdiff(select_proteins, df_pr_freq[-which(is.na(df_pr_freq$swap)),1])
+        if(length(select_proteins) > 0){
+            swap_prs = sample(select_proteins, length(select_proteins), replace=FALSE)
+            df_pr_freq[select_proteins, "swap"] = swap_prs
+            # 2. Replacing entries in the network with swap column of df_pr_freq
+            in_ppi_1 = ppi.permute[,1] %in% select_proteins
+            ppi.permute[in_ppi_1, 1] = sapply(ppi.permute[in_ppi_1, 1], function(each_pr){
+                                               return(df_pr_freq[each_pr,"swap"])})
+            in_ppi_2 = ppi.permute[,2] %in% select_proteins
+            ppi.permute[in_ppi_2, 2] = sapply(ppi.permute[in_ppi_2, 2], function(each_pr){
+                                               return(df_pr_freq[each_pr, "swap"])})
+        }
     }
+    return(ppi.permute)
 }
 
 #################################################
