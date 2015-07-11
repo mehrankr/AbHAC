@@ -288,50 +288,50 @@ snv.id.conversion = function(snv=NULL
                               ,id.con.set=id.conversion.set
                               ### a dataframe generated from acquire.ids()
 ){
-  id.conversion.set = id.con.set
-  snv.rn = ids.to.uniprot(rownames(snv)) ## converting snv rownames to uniprot
-  if(any(is.na(snv.rn))){
-    snv = snv[-which(is.na(snv.rn)),]
-    snv.rn = snv.rn[-which(is.na(snv.rn))]
-  }
-  for(j in 1:dim(snv)[2]){
-    snv[,j] = as.character(snv[,j])
-  }
-  if(any(duplicated(snv.rn))){
-    snv[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F)),] =
-      t(sapply(snv.rn[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F))],function(x){
-        index = which(snv.rn%in%x)
-        temp = as.character(apply(snv[index,],2,function(y){
-          return(paste(y,collapse="|"))
-        }))
-      }))
-    snv = snv[-which(duplicated(snv.rn)),]
-    snv.rn = snv.rn[-which(duplicated(snv.rn))]
-  }
-  rownames(snv) = snv.rn
-  if(any(grepl("NA|",snv[,1]))){
-    i=grep("NA|",snv[,1])
-    snv[i,] = apply(snv[i,],c(1,2),function(x){
-      temp = unlist(strsplit(as.character(x),"|",T))
-      if(any(grepl("NA",temp))){
-        temp = temp[-which(temp=="NA")]
-      }
-      if(length(temp)!=0){
-        temp = paste(temp,collapse="|")
-      }else{
-        temp = NA
-      }
-      return(temp)
-    })
-    for(j in 1:dim(snv)[2]){
-      if(any(grepl("NA",snv[,j]))){
-        i=grep("NA",snv[,j])
-        snv[i,j][which(snv[i,j]=="NA")] = NA
-      }
+    id.conversion.set = id.con.set
+    snv.rn = ids.to.uniprot(rownames(snv)) ## converting snv rownames to uniprot
+    if(any(is.na(snv.rn))){
+        snv = snv[-which(is.na(snv.rn)),]
+        snv.rn = snv.rn[-which(is.na(snv.rn))]
     }
-  }
-  return(snv)
-  ### An appropriate matrix of mutations for abhac analysis
+    for(j in 1:dim(snv)[2]){
+        snv[,j] = as.character(snv[,j])
+    }
+    if(any(duplicated(snv.rn))){
+        snv[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F)),] =
+            t(sapply(snv.rn[which(duplicated(snv.rn,fromLast=T)|duplicated(snv.rn,fromLast=F))],function(x){
+                index = which(snv.rn%in%x)
+                temp = as.character(apply(snv[index,],2,function(y){
+                return(paste(y,collapse="|"))
+                }))
+            }))
+        snv = snv[-which(duplicated(snv.rn)),]
+        snv.rn = snv.rn[-which(duplicated(snv.rn))]
+    }
+    rownames(snv) = snv.rn
+    if(any(grepl("NA|",snv[,1]))){
+        i=grep("NA|",snv[,1])
+        snv[i,] = apply(snv[i,],c(1,2),function(x){
+            temp = unlist(strsplit(as.character(x),"|",T))
+            if(any(grepl("NA",temp))){
+                temp = temp[-which(temp=="NA")]
+            }
+            if(length(temp)!=0){
+                temp = paste(temp,collapse="|")
+            }else{
+                temp = NA
+            }
+            return(temp)
+        })
+        for(j in 1:dim(snv)[2]){
+            if(any(grepl("NA",snv[,j]))){
+                i=grep("NA",snv[,j])
+                snv[i,j][which(snv[i,j]=="NA")] = NA
+            }
+        }
+    }
+    return(snv)
+    ### An appropriate matrix of mutations for abhac analysis
 }
 
 
@@ -351,29 +351,29 @@ rna.id.conversion = function(rna=NULL,
                               ###If the samples are not paired, Normal samples can have different names but must be accompanied with "N"
                               id.con.set=id.conversion.set
 ){
-  id.conversion.set = id.con.set
-  if(length(which(apply((rna==0),1,all)))>0){
-    rna = rna[-which(apply((rna==0),1,all)),]
-  }
-  averiger = function(x,rna.rn,rna){
-    i=which(rna.rn%in%x)
-    return(as.numeric(apply(rna[i,],2,mean)))
-  }
-  rna.rn = ids.to.uniprot(rownames(rna))
-  if(any(is.na(rna.rn))){
-    rna = rna[-which(is.na(rna.rn)),]
-    rna.rn = rna.rn[-which(is.na(rna.rn))]
-  }
-  if(any(duplicated(rna.rn))){
-    rna[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE)),] =
-      t(sapply(rna.rn[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE))],function(x){
-        return(averiger(x=x,rna=rna,rna.rn=rna.rn))}))
-    rna = rna[-which(duplicated(rna.rn)),]
-    rna.rn = rna.rn[-which(duplicated(rna.rn))]
-  }
-  rownames(rna) = rna.rn
-  return(rna)
-  ### an appropriate matrix of expression for abhac analysis
+    id.conversion.set = id.con.set
+    if(length(which(apply((rna==0),1,all)))>0){
+        rna = rna[-which(apply((rna==0),1,all)),]
+    }
+    averiger = function(x,rna.rn,rna){
+        i=which(rna.rn%in%x)
+        return(as.numeric(apply(rna[i,],2,mean)))
+    }
+    rna.rn = ids.to.uniprot(rownames(rna))
+    if(any(is.na(rna.rn))){
+        rna = rna[-which(is.na(rna.rn)),]
+        rna.rn = rna.rn[-which(is.na(rna.rn))]
+    }
+    if(any(duplicated(rna.rn))){
+        rna[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE)),] =
+            t(sapply(rna.rn[which(duplicated(rna.rn,fromLast=TRUE)|duplicated(rna.rn,fromLast=FALSE))],function(x){
+            return(averiger(x=x,rna=rna,rna.rn=rna.rn))}))
+        rna = rna[-which(duplicated(rna.rn)),]
+        rna.rn = rna.rn[-which(duplicated(rna.rn))]
+    }
+    rownames(rna) = rna.rn
+    return(rna)
+    ### an appropriate matrix of expression for abhac analysis
 }
 
 ##################################################
@@ -399,9 +399,57 @@ get_edgedegree_freq = function(ppi.database, fac){
     vec_freq = table(c(ppi_temp[,1], ppi_temp[,2]))
     df_freq = data.frame(Uniprot=names(vec_freq),
                          Num.Interactions=as.numeric(vec_freq))
+    rownames(df_freq) = df_freq[,1]
     return(df_freq)
 }
 
+
+#' Create a permuted network
+#'
+#' Used inside the fisher exact test motor function, it will provide permuted networks for estimating FDR/FWER.
+#' @param ppi.database 2 column undirected protein interaction network
+#' @param df_pr_freq dataframe of first column as unique protein names of ppi.database, and 2nd column as number of times they have occured in the network. This is calculated by get_edgedegree_freq
+#' @param method Specify "equal" for equal number of proteins in each bin sorted by edge degree, "ByDegree" to create bins solely based on edge degree and "AsPaper" to have one bin for each edge degree unless the number of proteins in the edge degree is lower than 3. For such proteins create k equal size bins.
+#' @param k number of bins to divide the proteins and permute inside those bins
+#' @return ppi_permuted 2 column undirected protein interaction network
+#' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
+#' @export
+permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=FALSE){
+    # Create label of groups for each protein in the network
+    ppi.permute = ppi.database[,1:2]
+    freq_degrees_vec = table(df_pr_freq[,2])
+    if(method == "AsPaper"){
+        rare_indices = as.numeric(names(freq_degrees_vec[freq_degrees_vec < 4]))
+        df_pr_freq$Label.bins = as.character(df_pr_freq[,2]) # as.char BCZ some must be replaced
+        index_rares = df_pr_freq[,2] %in% rare_indices
+        df_pr_freq$Label.bins[index_rares] = as.character(cut(
+            rank(df_pr_freq[index_rares, 2], ties.method = "random"), k, include.lowest=TRUE, right=TRUE))
+        df_pr_freq$Label.bins = factor(df_pr_freq$Label.bins)
+        ## Not to self: Currently 121 edge degree has only 2. WHY?
+    }else if(method == "ByDegree"){
+        rank_degrees = rank(df_pr_freq[,2], ties.method = "min")
+        df_pr_freq$Label.bins = cut(rank_degrees, k, include.lowest=TRUE, right=TRUE)
+    }else if(method == "equal"){
+        rank_degrees = rank(df_pr_freq[,2], ties.method = "random", include.lowest=TRUE, right=TRUE)
+        df_pr_freq$Label.bins = cut(rank_degrees, k)
+    }
+    if(verbose){
+        cat("Printing the bins of protein edge degrees\nand number of proteins within each bin\n")
+        print(table(df_pr_freq$Label.bins))
+        if(any(table(df_pr_freq$Label.bins) > nrow(ppi.database)/2)){
+            warning("Be advised that one of the bins includes half the proteins!\nChange the method to 'equal' or 'AsPaper'\n")
+        }
+    }
+    # Using the label created so far, permute proteins inside those labels
+    for(each_label in unique(df_pr_freq$Label.bins)){
+        select_proteins = df[df_pr_freq$Label.bins, 1]
+        df_pr_freq$swap[df_pr_freq$Label.bins] = permutate(
+            select_proteins, length(select_proteins), replace = FALSE)
+        swap_prs = 
+        ppi.database[ppi.database[,1] %in% select_proteins,1] = 
+
+    }
+}
 
 #################################################
 ##  AbHAC Fisher's exact test motor function   ##
