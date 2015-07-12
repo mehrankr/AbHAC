@@ -33,17 +33,19 @@ These can be Metastasis/Primary, HighGrade/LowGrade or any other sets of strings
 
 __ppi.database__: By default, the package uses a protein interaction network built using [PSICQUIC](http://www.ebi.ac.uk/Tools/webservices/psicquic/view/main.xhtml) 
 by querying for uniprot accession IDs obtained through [Uniprot.ws package](http://www.bioconductor.org/packages/release/bioc/html/UniProt.ws.html).
-The databases used for generating this dataframe include: ..
+The databases used for generating this dataframe include:
+
+DIP, InnateDB, IntAct, MatrixDB, MINT, I2D-IMEx, InnateDB-IMEx, MolCon and BindingDB
+
 
 The AbHAC functions require the first 2 columns of this dataframe. The IDs must be uniprot accession.
 
 
-__Random.ppis__: A list object containing N different _ppi.database_ dataframes that are permuted. 
-We used 10 of such dataframes (permutation scheme described in the [thesis](http://www.abhac.com/)/[paper](http://www.abhac.com/)). 
-You can choose to supply your own into the functions.
+__id.conversion.set__: A dataframe with the following column names:
 
-
-__id.conversion.set__: A dataframe with the following columns, used in ID conversions.
+| ENTREZ_GENE | UNIPROTKB | GENES   | ENSEMBL        | REFSEQ_PROTEIN    |
+| ----------- |:---------:|:-------:|:--------------:| -----------------:|
+| 7533        | Q04917    | YWHAH   |ENSG00000128245 | NP_003396         |
 
 
 
@@ -52,7 +54,7 @@ __id.conversion.set__: A dataframe with the following columns, used in ID conver
 Installing the package and all of its dependencies:
 
 ```R
-install.packages(c("devtools", "pheatmap", "plyr"))
+install.packages(c("devtools", "foreach", "doMC", "iterators" ,"plyr"))
 source("http://bioconductor.org/biocLite.R")
 biocLite("EdgeR")
 require(devtools)
@@ -114,12 +116,31 @@ set.abhac.result = set.abhac(snv=snv,rna=rna,fac=fac,
 
 ## Important parameters
 
-_fisher.fdr_ : This parameter which is defaulted to using the permutation method described in the paper, 
+_fisher.fdr_ : This parameter which is defaulted to using the permutation method described in the paper,
 can be set to any of the parameters accepted by _p.adjust_.
+The permutation based methods include _Permutation.FDR_ and _Permutation.FWER_.
+if selecting any of these methods, other parameters described below would be important.
 
 
 _fisher.fdr.cutoff_ : By default is set to 0.05.
 
+
+_num.permuted.ppi_: Number of permuted protein interaction networks to generate for multiple testing correction.
+
+
+_method.permuted.ppi_: There are three options: __AsPaper__, __ByDegree__ or __equal__.
+
+* __AsPaper__ This method assumes all of the edge degrees with more than 4 proteins as a bin of proteins that proteins
+will be permuted inside that bin. However for edge degrees with less than 4 proteins, they all will be groupd into k
+bins defined by _bins.permuted.ppi_.
+
+* __ByDegree__ Proteins will be grouped into k categories determined by _bins.permuted.ppi_ without breaking the edge degrees.
+The bins created would have varying numbers; Some very low, some very high.
+
+* __equal__ This would create bins with equal size of proteins. For bins that have thousand of proteins, it randomly distributes them to closest bins. It does this by ranking the proteins according to their edge degree and using the "random" method of ties.method in R rank function.
+
+
+_bins.permuted.ppi_: Number of bins that proteins in the network are categorized into and then permuted within those bins. Read parameter specified by _method.permuted.ppi_ to understand more.
 
 
 ### Nomenclature:
