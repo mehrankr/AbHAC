@@ -460,6 +460,12 @@ permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=
 ##  AbHAC Fisher's exact test motor function   ##
 #################################################
 
+
+#' Keeps only one undirected edge between two proteins
+#'
+#' @param ppi.database 2 column undirected protein interaction network
+#' @return A protein interaction 2 column dataframe of unique undirected interactions
+#' @author Mehran Karimzadeh mehran dot karimzadehreghbati at mail dot mcgill dot ca 
 remove_duplicate_interactions = function(ppi.database){
     ppi_temp = unique(ppi.database)
     ppi_temp$AB = paste(ppi_temp[,1], ppi_temp[,2], sep="_")
@@ -471,6 +477,12 @@ remove_duplicate_interactions = function(ppi.database){
     return(ppi_temp)
 }
 
+#' Corrects p-values by the provided multiple testing correction method
+#'
+#' @param list.pvalues 2 column dataframes of protein names and associated p-values must be put in a list structure where the 1st list member corresponds to the p-values based on the true protein interaction network and other list members if they exist must be based on permuted interaction networks
+#' @param fisher.fdr Multiple testing correction method from: "Permutation.FDR", "Permutation.FWER", or p.adjust methods.
+#' @param fisher.fdr.cutoff the cutoff for FWER of FDR (numeric)
+#' @author Mehran Karimzadeh mehran dot karimzadehreghbati at mail dot mcgill dot ca
 multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.fdr.cutoff){
     n.nets = length(list.pvalues)
     if(fisher.fdr == "Permutation.FDR"){
@@ -519,7 +531,6 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
         df$FDR = p.adjust(df[,2], method=fisher.fdr)
         cutoff = max(which(df[,2]<=fisher.fdr.cutoff))
     }
-    print(paste("Cutoff Determined by",fisher.fdr,"Method is:",cutoff))
     return(df)
 }
 
@@ -639,7 +650,6 @@ Integrator = function(ppi.database=NULL,
             list.pvalues[[p]] = df
         }
         df = multiple.testing.correction.handler(list.pvalues, fisher.fdr, fisher.fdr.cutoff)
-        print(paste("Cutoff Determined by",fisher.fdr,"Method is:",cutoff))
         list.results = c(list.results,list(df))
     }
     names(list.results) = names(list.categories)
