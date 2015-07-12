@@ -13,17 +13,6 @@
 NULL
 
 
-#' @name Random.ppis
-#' @title 10 randomized Protein interaction networks
-#' @description This data set is obtained with bioconductor PSICQUIC package accessing following databases: DIP,InnateDB,IntAct,MatrixDB,MINT,I2D-IMEx,InnateDB-IMEx,MolCon,BindingDB and then randomized 10 times and represented as a list
-#' @docType data
-#' @usage Random.ppis
-#' @format A list representing 10 randomized networks in format of 2 column dataframes representing undirected interaction information
-#' @source PSICQUIC Randomized
-#' @author Mehran Karimzadeh
-NULL
-
-
 #' @name id.conversion.set
 #' @title Table for ID Conversions inside fucntions
 #' @description This data set is obtained with UniProt.ws bioconductor package getting all entrez gene IDs and their associated uniprot IDs, ensembl gene IDs, Human Gene Symbols and Human Protein Refseq IDs
@@ -541,8 +530,12 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
 #' @param list.categories (Internal) is list of proteins for each enrichment category with accurate names as of enrichment.categories
 #' @param fac is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.
 #' @param id.conversion.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
-#' @param fisher.fdr Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
+#' @param fisher.fdr Can be either "Permutation.FDR", "Permutation.FWER" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
 #' @param fisher.fdr.cutoff Cutoff to be used for fisher's exact test false discovery rates.
+#' @param num.permuted.ppi If you have selected any of the two permutation based methods, the number of permuted networks to be used for multiple testing correction must be specified.
+#' @param method.permuted.ppi If you have selected any of the two permutation based methods, the method for binning proteins by their edge degree for creting permuted networks for multiple testing correction must be specified. It should be one of ("AsPaper", "equal", "ByDegree").
+#' @param bins.permuted.ppi If you have selected any of the two permutation based methods, specified the number of bins for proteins to be grouped into. If you have selected "AsPaper", you would better leave this as 4 (default). For the two other methods, we advise a number between 10-20.
+#' @param num.cores Note that a parallel for loop using foreach package calculates the p-values for all the different permuted networks. The number of processors to be used for this foreach has to be set by you using the "registerDoMC(cores=4)". However this parameters determined the number of processors to be used for calculation of pvalues by an mclapply feature. So if you are using registerDoMC(cores=4) and you want to limit the analysis to 12 processors, you must specify num.cores = 3.
 #' @return A dataframe with Benjamini-Hochberg FDR bases on fisher's one tail exact test for all enrichment categories for all proteins that interact with at least one of the input proteins
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
@@ -582,7 +575,7 @@ Integrator = function(ppi.database=NULL,
     df_pr_freq = get_edgedegree_freq(ppi.database, fac)
     for(l in 1:length(list.categories)){
         ###Fina all the proteins that interact with at least one of the proteins in list.categories[[i]]
-        list.pvalues = foreach(p=1:(num.permuted.ppi + 1) %dopar% {
+        list.pvalues = foreach(p=1:(num.permuted.ppi + 1)) %dopar% {
             ppi.dat = ppi.lists[[p]]
             if(is.null(ppi.dat)){
                 ppi.dat = permute_pdr(ppi.database, df_pr_freq, method=method.permuted.ppi, k=bins.permuted.ppi)
@@ -617,7 +610,6 @@ Integrator = function(ppi.database=NULL,
                 reference.proteins = unique(union(ppi.dat[which(ppi.dat[,1]%in%case),2],ppi.dat[which(ppi.dat[,2]%in%case),1]))
             }
             if(.Platform$OS.type!="windows"){
-                num.cores=detectCores()
                 df = unlist(mclapply(reference.proteins,function(protein){
                     interactors = unique(union(as.character(ppi.dat[which(ppi.dat[,1]%in%protein),2]),
                                           as.character(ppi.dat[which(ppi.dat[,2]%in%protein),1])))
@@ -628,7 +620,7 @@ Integrator = function(ppi.database=NULL,
                     p.value = fisher.test(matrix(c(A,C,B,D),nrow=2),alternative="greater")[[1]]
                     result = p.value
                     return(result)
-                    },mc.cores=6))
+                    },mc.cores=num.cores))
                 df = data.frame(reference.proteins,as.numeric(df))
             }else{
                 df = sapply(reference.proteins,function(protein){
@@ -647,7 +639,7 @@ Integrator = function(ppi.database=NULL,
             colnames(df) = c("Protein",paste("P.Value",names(list.categories)[l],sep="_"))
             df = as.data.frame(df)
             df[,2] = as.numeric(df[,2])
-            list.pvalues[[p]] = df
+            df
         }
         df = multiple.testing.correction.handler(list.pvalues, fisher.fdr, fisher.fdr.cutoff)
         list.results = c(list.results,list(df))
@@ -807,6 +799,10 @@ deizer = function(rna=NULL,
 #' @param fac is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.
 #' @param fisher.fdr Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
 #' @param fisher.fdr.cutoff Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.
+#' @param num.permuted.ppi If you have selected any of the two permutation based methods, the number of permuted networks to be used for multiple testing correction must be specified.
+#' @param method.permuted.ppi If you have selected any of the two permutation based methods, the method for binning proteins by their edge degree for creting permuted networks for multiple testing correction must be specified. It should be one of ("AsPaper", "equal", "ByDegree").
+#' @param bins.permuted.ppi If you have selected any of the two permutation based methods, specified the number of bins for proteins to be grouped into. If you have selected "AsPaper", you would better leave this as 4 (default). For the two other methods, we advise a number between 10-20.
+#' @param num.cores Note that a parallel for loop using foreach package calculates the p-values for all the different permuted networks. The number of processors to be used for this foreach has to be set by you using the "registerDoMC(cores=4)". However this parameters determined the number of processors to be used for calculation of pvalues by an mclapply feature. So if you are using registerDoMC(cores=4) and you want to limit the analysis to 12 processors, you must specify num.cores = 3.
 #' @return This function returns a data.frame with results of integrative network enrichment analysis
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
@@ -843,8 +839,12 @@ set.abhac = function(ppi.database=NULL,
                      fac=NULL,
                      clinical=NULL,
                      fisher.fdr="Permutation",
-                     fisher.fdr.cutoff=0.05
-){
+                     fisher.fdr.cutoff=0.05,
+                     num.permuted.ppi=10,
+                     bins.permuted.ppi=4,
+                     method.permuted.ppi="AsPaper",
+                     num.cores=6)
+{
   if(is.null(ppi.database)){
     ppi.database = AbHAC::ppi.database[,1:2]
   }
@@ -931,7 +931,11 @@ set.abhac = function(ppi.database=NULL,
     ## Local Function that gets snv.in, de.up, de.down, de and SNV and returns a dataframe of results
     abhac = Integrator(ppi.database=ppi.database, list.categories=list.categories,
 	fac=fac, fisher.fdr=fisher.fdr,
-	fisher.fdr.cutoff=fisher.fdr.cutoff)
+	fisher.fdr.cutoff=fisher.fdr.cutoff,
+        num.permuted.ppi,
+        method.permuted.ppi,
+        bins.permuted.ppi,
+        num.cores)
     list.abhacs[[lcind]] = abhac
     lcind=lcind+1
   }
@@ -951,6 +955,10 @@ set.abhac = function(ppi.database=NULL,
 #' @param id.conversion.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @param fisher.fdr Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
 #' @param fisher.fdr.cutoff Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.
+#' @param num.permuted.ppi If you have selected any of the two permutation based methods, the number of permuted networks to be used for multiple testing correction must be specified.
+#' @param method.permuted.ppi If you have selected any of the two permutation based methods, the method for binning proteins by their edge degree for creting permuted networks for multiple testing correction must be specified. It should be one of ("AsPaper", "equal", "ByDegree").
+#' @param bins.permuted.ppi If you have selected any of the two permutation based methods, specified the number of bins for proteins to be grouped into. If you have selected "AsPaper", you would better leave this as 4 (default). For the two other methods, we advise a number between 10-20.
+#' @param num.cores Note that a parallel for loop using foreach package calculates the p-values for all the different permuted networks. The number of processors to be used for this foreach has to be set by you using the "registerDoMC(cores=4)". However this parameters determined the number of processors to be used for calculation of pvalues by an mclapply feature. So if you are using registerDoMC(cores=4) and you want to limit the analysis to 12 processors, you must specify num.cores = 3.
 #' @return This function returns a data.frame with results of integrative network enrichment analysis
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 #' @export
@@ -976,7 +984,11 @@ abhac.brief = function(de.up=NULL,
                        fac=NULL,
                        fisher.fdr="Permutation",
                        fisher.fdr.cutoff=0.05,
-                       id.conversion.set=NULL){
+                       id.conversion.set=NULL,
+                       num.permuted.ppi,
+                       method.permuted.ppi,
+                       bins.permuted.ppi,
+                       num.cores){
   if(is.null(de.up) & is.null(de.down) & is.null(snv)){
     stop("Please make sure the 3 main variables (de.up, de.down, snv) are entered correctly")
   }
@@ -1024,7 +1036,12 @@ abhac.brief = function(de.up=NULL,
   list.categories = list.categories[index.cat] 
   list.categories = list.categories[which(names(list.categories)%in%enrichment.categories)]
   abhac = Integrator(ppi.database=ppi.database[,1:2],list.categories=list.categories,
-                     fac=fac,id.conversion.set=id.conversion.set. , fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff)
+                     fac=fac,id.conversion.set=id.conversion.set.,
+                     fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff,
+                     num.permuted.ppi,
+                     method.permuted.ppi,
+                     bins.permuted.ppi,
+                     num.cores)
   return(abhac)
   ### Returns a dataframe with each protein, all its interactors, and enrichments in 3 different categories, before and after correction for multiple testing
 }
