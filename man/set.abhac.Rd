@@ -9,8 +9,8 @@ set.abhac(ppi.database = NULL, rna = NULL, snv = NULL,
   fdr.cutoff = 0.05, enrichment.categories = NULL,
   id.conversion.set = NULL, fac = NULL, clinical = NULL,
   fisher.fdr = "Permutation.FDR", fisher.fdr.cutoff = 0.05,
-  num.permuted.ppi = 10, bins.permuted.ppi = 4,
-  method.permuted.ppi = "AsPaper", num.cores = 6)
+  num.permuted.ppi = 10, method.permuted.ppi = "AsPaper",
+  bins.permuted.ppi = 4, num.cores = 6)
 }
 \arguments{
 \item{ppi.database}{2 column whole protein interaction network. Either loaded by data(ppi.database)(filtering is recommended based on types of interactions) or by user.}
@@ -33,15 +33,17 @@ set.abhac(ppi.database = NULL, rna = NULL, snv = NULL,
 
 \item{fac}{is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.}
 
+\item{clinical}{a dataframe of 2 columns with first column identical to snv dataframe or RNA dataframe (without "T"). Second column provides a particular categrical phenodata of patients that will be used as a factor to perform the analysis within the factor levels independently.}
+
 \item{fisher.fdr}{Can be either "Permutation.FDR", "Permutation.FWER" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.}
 
 \item{fisher.fdr.cutoff}{Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.}
 
 \item{num.permuted.ppi}{If you have selected any of the two permutation based methods, the number of permuted networks to be used for multiple testing correction must be specified.}
 
-\item{bins.permuted.ppi}{If you have selected any of the two permutation based methods, specified the number of bins for proteins to be grouped into. If you have selected "AsPaper", you would better leave this as 4 (default). For the two other methods, we advise a number between 10-20.}
-
 \item{method.permuted.ppi}{If you have selected any of the two permutation based methods, the method for binning proteins by their edge degree for creting permuted networks for multiple testing correction must be specified. It should be one of ("AsPaper", "equal", "ByDegree").}
+
+\item{bins.permuted.ppi}{If you have selected any of the two permutation based methods, specified the number of bins for proteins to be grouped into. If you have selected "AsPaper", you would better leave this as 4 (default). For the two other methods, we advise a number between 10-20.}
 
 \item{num.cores}{Note that a parallel for loop using foreach package calculates the p-values for all the different permuted networks. The number of processors to be used for this foreach has to be set by you using the "registerDoMC(cores=4)". However this parameters determined the number of processors to be used for calculation of pvalues by an mclapply feature. So if you are using registerDoMC(cores=4) and you want to limit the analysis to 12 processors, you must specify num.cores = 3.}
 }

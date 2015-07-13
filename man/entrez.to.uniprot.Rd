@@ -7,9 +7,9 @@
 entrez.to.uniprot(entrez = NULL, id.con.set = id.conversion.set)
 }
 \arguments{
-\item{id.con.set}{A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)}
+\item{entrez}{is vector of Entrez ID characters}
 
-\item{Entrez}{is vector of Entrez ID characters}
+\item{id.con.set}{A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)}
 }
 \value{
 If a Entrez accession is not found, the return will be the ID itself

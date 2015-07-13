@@ -80,7 +80,7 @@ NULL
 #' uniprot.to.hgnc(ids.to.uniprot("VHL"))
 uniprot.to.hgnc = function(uniprot, id.con.set=id.conversion.set){
     # If a uniprot ID is not found, it returns the ID itself instead of ""
-    if(any(id.con.set$UNIPROTKB %in% uniprot)){
+    if(any(uniprot %in% id.con.set$UNIPROTKB)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
         hgnc = temp_idconv$GENES[uniprot]
@@ -105,10 +105,10 @@ uniprot.to.hgnc = function(uniprot, id.con.set=id.conversion.set){
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 hgnc.to.uniprot = function(hgnc, id.con.set=id.conversion.set){
-    if(any(id.con.set$GENES %in% hgnc)){
+    if(any(hgnc %in% id.con.set$GENES)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$GENES
-        hgnc = temp_idconv$UNIPROTKB[hgnc]
+        uniprot = temp_idconv$UNIPROTKB[hgnc]
     }else{
         warning(sprintf("HGNC to Uniprot conversion failed for %s %s %s ...\n",
                         hgnc[1], hgnc[1], hgnc[3]))
@@ -133,10 +133,10 @@ hgnc.to.uniprot = function(hgnc, id.con.set=id.conversion.set){
 #' @examples
 #' uniprot.to.entrez(ids.to.uniprot("VHL"))
 uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
-    if(any(id.con.set$UNIPROTKB %in% uniprot)){
+    if(any(uniprot %in% id.con.set$UNIPROTKB)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$ENTREZ_GENE)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
-        entrez= temp_idconv$ENTREZ_GENE[uniprot]
+        entrez = temp_idconv$ENTREZ_GENE[uniprot]
     }else{
         warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
                         uniprot[1], uniprot[2], uniprot[3]))
@@ -153,7 +153,7 @@ uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
 #' Entrez Gene ID to Uniprot accession
 #' 
 #' Converts Entrez Gene ID to uniprot accessions
-#' @param Entrez is vector of Entrez ID characters
+#' @param entrez is vector of Entrez ID characters
 #' @param id.con.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @return If a Entrez accession is not found, the return will be the ID itself
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
@@ -161,10 +161,10 @@ uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
 #' @examples
 #' entrez.to.uniprot(c("12", "5421", "65223"))
 entrez.to.uniprot = function(entrez=NULL,id.con.set=id.conversion.set){
-    if(any(id.con.set$ENTREZ_GENE %in% entrez)){
+    if(any(entrez %in% id.con.set$ENTREZ_GENE)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$ENTREZ_GENE
-        entrez= temp_idconv$UNIPROTKB[entrez]
+        uniprot = temp_idconv$UNIPROTKB[entrez]
     }else{
         warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
                         entrez[1], entrez[2], entrez[3]))
@@ -187,10 +187,10 @@ entrez.to.uniprot = function(entrez=NULL,id.con.set=id.conversion.set){
 #' @return If a Uniprot accession is not found, it returns the ID itself instead of ""
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 ensembl.to.uniprot = function(ensembl=NULL,id.con.set=id.conversion.set){
-    if(any(id.con.set$ENSEMBL %in% ensembl)){
+    if(any(ensembl %in% id.con.set$ENSEMBL)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$ENSEMBL) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$ENSEMBL
-        ensembl = temp_idconv$UNIPROTKB[ensembl]
+        uniprot = temp_idconv$UNIPROTKB[ensembl]
     }else{
         warning(sprintf("Ensembl to Uniprot conversion failed for %s %s %s ...\n",
                         ensembl[1], ensembl[2], ensembl[3]))
@@ -212,10 +212,10 @@ ensembl.to.uniprot = function(ensembl=NULL,id.con.set=id.conversion.set){
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 refseqp.to.uniprot = function(refseqp=NULL,
                                id.con.set=id.conversion.set){
-    if(any(id.con.set$REFSEQ_PROTEIN %in% refseqp)){
+    if(any(refseqp %in% id.con.set$REFSEQ_PROTEIN)){
         temp_idconv = id.con.set[-which(duplicated(id.con.set$REFSEQ_PROTEIN) | is.na(id.con.set$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$REFSEQ_PROTEIN
-        uniprot = temp_idconv$UNIPROTKB[regseqp]
+        uniprot = temp_idconv$UNIPROTKB[refseqp]
     }else{
         warning(sprintf("Regseqp to Uniprot conversion failed for %s %s %s ...\n",
                         refseqp[1], refseqp[2], refseqp[3]))
@@ -261,6 +261,7 @@ ids.to.uniprot = function(ids=NULL, id.con.set=id.conversion.set){
     }
     return(temp)
 }
+
 
 #' Mutation Matrix ID Conversion
 #' 
@@ -475,7 +476,7 @@ remove_duplicate_interactions = function(ppi.database){
 multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.fdr.cutoff){
     n.nets = length(list.pvalues)
     if(fisher.fdr == "Permutation.FDR"){
-        FDR.lists = rep(NA, n.nets)
+        FDR.lists = rep(NA, n.nets - 1)
         index.fdr.lists = 1
         ##For each of the Random networks, perform the calculation seperately
         for(ppi.net in list.pvalues[2:n.nets]){
@@ -501,7 +502,7 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
                   p.ind=p.ind+1
             }
             FDR.lists[index.fdr.lists] = cutoff
-            index.fdr.lists = index.fdr.lists+1
+            index.fdr.lists = index.fdr.lists + 1
         }
         df = list.pvalues[[1]]
         if(any(is.na(FDR.lists))){
@@ -794,6 +795,7 @@ deizer = function(rna=NULL,
 #' @param ppi.database 2 column whole protein interaction network. Either loaded by data(ppi.database)(filtering is recommended based on types of interactions) or by user.
 #' @param rna.paired boolean indicating if RNA samples are paired
 #' @param fdr.cutoff values higher than 0.1 are not advised
+#' @param clinical a dataframe of 2 columns with first column identical to snv dataframe or RNA dataframe (without "T"). Second column provides a particular categrical phenodata of patients that will be used as a factor to perform the analysis within the factor levels independently.
 #' @param enrichment.categories can be all or any of the c("snv.de.up.de.down","de.up","de.down","de","snv","snv.de.up","snv.de.down","snv.de")
 #' @param id.conversion.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @param fac is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.
@@ -841,8 +843,8 @@ set.abhac = function(ppi.database=NULL,
                      fisher.fdr="Permutation.FDR",
                      fisher.fdr.cutoff=0.05,
                      num.permuted.ppi=10,
-                     bins.permuted.ppi=4,
                      method.permuted.ppi="AsPaper",
+                     bins.permuted.ppi=4,
                      num.cores=6)
 {
   if(is.null(ppi.database)){
@@ -932,10 +934,10 @@ set.abhac = function(ppi.database=NULL,
     abhac = Integrator(ppi.database=ppi.database, list.categories=list.categories,
 	fac=fac, fisher.fdr=fisher.fdr,
 	fisher.fdr.cutoff=fisher.fdr.cutoff,
-        num.permuted.ppi,
-        method.permuted.ppi,
-        bins.permuted.ppi,
-        num.cores)
+        num.permuted.ppi=num.permuted.ppi,
+        method.permuted.ppi=method.permuted.ppi,
+        bins.permuted.ppi=bins.permuted.ppi,
+        num.cores=num.cores)
     list.abhacs[[lcind]] = abhac
     lcind=lcind+1
   }
@@ -1038,10 +1040,10 @@ abhac.brief = function(de.up=NULL,
   abhac = Integrator(ppi.database=ppi.database[,1:2],list.categories=list.categories,
                      fac=fac,id.conversion.set=id.conversion.set.,
                      fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff,
-                     num.permuted.ppi,
-                     method.permuted.ppi,
-                     bins.permuted.ppi,
-                     num.cores)
+                     num.permuted.ppi=num.permuted.ppi,
+                     method.permuted.ppi=method.permuted.ppi,
+                     bin.permuted.ppi=bins.permuted.ppi,
+                     num.cores=num.cores)
   return(abhac)
   ### Returns a dataframe with each protein, all its interactors, and enrichments in 3 different categories, before and after correction for multiple testing
 }
