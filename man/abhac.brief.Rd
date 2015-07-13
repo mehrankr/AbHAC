@@ -7,7 +7,7 @@ This function performs AbHAC analysis on inputs of mutations, upregulated and do
 \usage{
 abhac.brief(de.up = NULL, de.down = NULL, snv = NULL,
   ppi.database = NULL, enrichment.categories = NULL, fac = NULL,
-  fisher.fdr = "Permutation", fisher.fdr.cutoff = 0.05,
+  fisher.fdr = "Permutation.FDR", fisher.fdr.cutoff = 0.05,
   id.conversion.set = NULL, num.permuted.ppi, method.permuted.ppi,
   bins.permuted.ppi, num.cores)
 }
@@ -24,7 +24,7 @@ abhac.brief(de.up = NULL, de.down = NULL, snv = NULL,
 
 \item{fac}{is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.}
 
-\item{fisher.fdr}{Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.}
+\item{fisher.fdr}{Can be either "Permutation.FDR", "Permutation.FWER" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.}
 
 \item{fisher.fdr.cutoff}{Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.}
 

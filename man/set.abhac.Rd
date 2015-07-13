@@ -8,7 +8,7 @@ set.abhac(ppi.database = NULL, rna = NULL, snv = NULL,
   expression.method = NULL, rna.paired = FALSE, correction.method = "BH",
   fdr.cutoff = 0.05, enrichment.categories = NULL,
   id.conversion.set = NULL, fac = NULL, clinical = NULL,
-  fisher.fdr = "Permutation", fisher.fdr.cutoff = 0.05,
+  fisher.fdr = "Permutation.FDR", fisher.fdr.cutoff = 0.05,
   num.permuted.ppi = 10, bins.permuted.ppi = 4,
   method.permuted.ppi = "AsPaper", num.cores = 6)
 }
@@ -33,7 +33,7 @@ set.abhac(ppi.database = NULL, rna = NULL, snv = NULL,
 
 \item{fac}{is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.}
 
-\item{fisher.fdr}{Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.}
+\item{fisher.fdr}{Can be either "Permutation.FDR", "Permutation.FWER" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.}
 
 \item{fisher.fdr.cutoff}{Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.}
 

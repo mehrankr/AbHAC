@@ -797,7 +797,7 @@ deizer = function(rna=NULL,
 #' @param enrichment.categories can be all or any of the c("snv.de.up.de.down","de.up","de.down","de","snv","snv.de.up","snv.de.down","snv.de")
 #' @param id.conversion.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
 #' @param fac is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.
-#' @param fisher.fdr Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
+#' @param fisher.fdr Can be either "Permutation.FDR", "Permutation.FWER" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
 #' @param fisher.fdr.cutoff Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.
 #' @param num.permuted.ppi If you have selected any of the two permutation based methods, the number of permuted networks to be used for multiple testing correction must be specified.
 #' @param method.permuted.ppi If you have selected any of the two permutation based methods, the method for binning proteins by their edge degree for creting permuted networks for multiple testing correction must be specified. It should be one of ("AsPaper", "equal", "ByDegree").
@@ -838,7 +838,7 @@ set.abhac = function(ppi.database=NULL,
                      id.conversion.set=NULL,
                      fac=NULL,
                      clinical=NULL,
-                     fisher.fdr="Permutation",
+                     fisher.fdr="Permutation.FDR",
                      fisher.fdr.cutoff=0.05,
                      num.permuted.ppi=10,
                      bins.permuted.ppi=4,
@@ -953,7 +953,7 @@ set.abhac = function(ppi.database=NULL,
 #' @param fac is all the proteins that exist in protein interaction network. If not using data(ppi.database), it is necessary to specify.
 #' @param enrichment.categories can be all or any of the c("snv.de.up.de.down","de.up","de.down","de","snv","snv.de.up","snv.de.down","snv.de")
 #' @param id.conversion.set A dataframe for ID conversions provided as global variable id.conversion.set. Columns represent Entrez gene ID, Uniprot Accession, Gene Symbol, Ensembl gene ID and refseq protein ID (all human)
-#' @param fisher.fdr Can be either "Permutation" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
+#' @param fisher.fdr Can be either "Permutation.FDR", "Permutation.FWER" or any of the methods parsed into p.adjust. Type ?p.adjust for more details.
 #' @param fisher.fdr.cutoff Cutoff used for false discovery rate cutoff in fisher's exact test. By default set to 0.2.
 #' @param num.permuted.ppi If you have selected any of the two permutation based methods, the number of permuted networks to be used for multiple testing correction must be specified.
 #' @param method.permuted.ppi If you have selected any of the two permutation based methods, the method for binning proteins by their edge degree for creting permuted networks for multiple testing correction must be specified. It should be one of ("AsPaper", "equal", "ByDegree").
@@ -982,7 +982,7 @@ abhac.brief = function(de.up=NULL,
                        ### dataframe of whole human protein interaction network that can be obtained from protein.database.creator()
                        enrichment.categories=NULL,
                        fac=NULL,
-                       fisher.fdr="Permutation",
+                       fisher.fdr="Permutation.FDR",
                        fisher.fdr.cutoff=0.05,
                        id.conversion.set=NULL,
                        num.permuted.ppi,
