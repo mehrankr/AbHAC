@@ -8,8 +8,8 @@ This function performs AbHAC analysis on inputs of mutations, upregulated and do
 abhac.brief(de.up = NULL, de.down = NULL, snv = NULL,
   ppi.database = NULL, enrichment.categories = NULL, fac = NULL,
   fisher.fdr = "Permutation.FDR", fisher.fdr.cutoff = 0.05,
-  id.conversion.set = NULL, num.permuted.ppi, method.permuted.ppi,
-  bins.permuted.ppi, num.cores)
+  id.conversion.set = NULL, num.permuted.ppi = 10,
+  method.permuted.ppi = "AsPaper", bins.permuted.ppi = 4, num.cores = 6)
 }
 \arguments{
 \item{de.up}{either ensembl gene IDs, HGNC, ENTREZ or uniprot IDs for a vector of upregulated genes}

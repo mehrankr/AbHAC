@@ -987,10 +987,10 @@ abhac.brief = function(de.up=NULL,
                        fisher.fdr="Permutation.FDR",
                        fisher.fdr.cutoff=0.05,
                        id.conversion.set=NULL,
-                       num.permuted.ppi,
-                       method.permuted.ppi,
-                       bins.permuted.ppi,
-                       num.cores){
+                       num.permuted.ppi=10,
+                       method.permuted.ppi="AsPaper",
+                       bins.permuted.ppi=4,
+                       num.cores=6){
   if(is.null(de.up) & is.null(de.down) & is.null(snv)){
     stop("Please make sure the 3 main variables (de.up, de.down, snv) are entered correctly")
   }
@@ -1042,7 +1042,7 @@ abhac.brief = function(de.up=NULL,
                      fisher.fdr=fisher.fdr,fisher.fdr.cutoff=fisher.fdr.cutoff,
                      num.permuted.ppi=num.permuted.ppi,
                      method.permuted.ppi=method.permuted.ppi,
-                     bin.permuted.ppi=bins.permuted.ppi,
+                     bins.permuted.ppi=bins.permuted.ppi,
                      num.cores=num.cores)
   return(abhac)
   ### Returns a dataframe with each protein, all its interactors, and enrichments in 3 different categories, before and after correction for multiple testing
