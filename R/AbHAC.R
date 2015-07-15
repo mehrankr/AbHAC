@@ -880,7 +880,12 @@ set.abhac = function(ppi.database=NULL,
     }
   }
   if(is.null(clinical)){
-    clinical = data.frame(Patient=colnames(snv),Status="Tumor")
+      if(is.null(snv)){
+        clinical = data.frame(Patient=gsub("T", "", colnames(rna)[grep("T", colnames(rna))]),
+                               Status="Tumor")
+      }else{
+        clinical = data.frame(Patient=colnames(snv),Status="Tumor")
+      }
   }
   #based on de method, find differentially expressed genes
   grs = unique(clinical[,2])
