@@ -719,13 +719,14 @@ deizer = function(rna=NULL,
   if(is.null(i)|is.null(paired)|is.null(rna)|is.null(expression.method)){
     stop("Please enter valid arguments for the function")
   }
+  patients_raw = gsub("T", "", colnames(rna)[grep("T", colnames(rna))])
   rna = rna[which(rownames(rna)%in%fac),]
   if(expression.method=="Microarray"){
     if(paired) {
       index = 1:length(i)*2
       z=1
       for(test in 1:length(i)) {
-        index[(z:(z+1))] = grep(colnames(snv)[test],colnames(rna))
+        index[(z:(z+1))] = grep(patients_raw[test],colnames(rna))
         z=z+2
       }
       x = rna[,index]
@@ -734,7 +735,7 @@ deizer = function(rna=NULL,
       status[grep("N",colnames(x))] = 2
       design = model.matrix(~patient.stat+status)
     } else  {
-      index = which(gsub("T","",colnames(rna))%in% colnames(snv)[i])
+      index = which(gsub("T","",colnames(rna))%in% patients_raw[i])
       x = rna[ , c(index,grep("N",colnames(rna)))]
       status=rep(1, length(colnames(x)))
       status[grep("N",colnames(x))] = 2
@@ -756,12 +757,12 @@ deizer = function(rna=NULL,
       index = 1:length(i)*2
       z=1
       for(test in 1:length(i)){
-        index[(z:(z+1))] = grep(colnames(snv)[test],colnames(rna))
+        index[(z:(z+1))] = grep(patients_raw[test],colnames(rna))
         z=z+2
       }
       x = rna[,index]
     }else {
-      index = which(gsub("T","",colnames(rna))%in%colnames(snv)[i])
+      index = i
       x = rna[,c(index,grep("N",colnames(rna)))]
       ##BECAREFUL, NOT COMPLETE FOR PAIRED SAMPLES
     }
