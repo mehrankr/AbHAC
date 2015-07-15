@@ -81,7 +81,8 @@ NULL
 uniprot.to.hgnc = function(uniprot, id.con.set=id.conversion.set){
     # If a uniprot ID is not found, it returns the ID itself instead of ""
     if(any(uniprot %in% id.con.set$UNIPROTKB)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$GENES)), ]
+        temp_idconv = id.con.set[-which(is.na(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)),]
+        temp_idconv = temp_idconv[-which(duplicated(temp_idconv$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
         hgnc = temp_idconv$GENES[uniprot]
     }else{
@@ -106,7 +107,8 @@ uniprot.to.hgnc = function(uniprot, id.con.set=id.conversion.set){
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 hgnc.to.uniprot = function(hgnc, id.con.set=id.conversion.set){
     if(any(hgnc %in% id.con.set$GENES)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)), ]
+        temp_idconv = id.con.set[-which(is.na(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)),]
+        temp_idconv = temp_idconv[-which(duplicated(temp_idconv$GENES)), ]
         rownames(temp_idconv) = temp_idconv$GENES
         uniprot = temp_idconv$UNIPROTKB[hgnc]
     }else{
@@ -134,7 +136,8 @@ hgnc.to.uniprot = function(hgnc, id.con.set=id.conversion.set){
 #' uniprot.to.entrez(ids.to.uniprot("VHL"))
 uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
     if(any(uniprot %in% id.con.set$UNIPROTKB)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$UNIPROTKB) | is.na(id.con.set$ENTREZ_GENE)), ]
+        temp_idconv = id.con.set[-which(is.na(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)),]
+        temp_idconv = temp_idconv[-which(duplicated(temp_idconv$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
         entrez = temp_idconv$ENTREZ_GENE[uniprot]
     }else{
@@ -162,7 +165,8 @@ uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
 #' entrez.to.uniprot(c("12", "5421", "65223"))
 entrez.to.uniprot = function(entrez=NULL,id.con.set=id.conversion.set){
     if(any(entrez %in% id.con.set$ENTREZ_GENE)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)), ]
+        temp_idconv = id.con.set[-which(is.na(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)),]
+        temp_idconv = temp_idconv[-which(duplicated(temp_idconv$ENTREZ_GENE)), ]
         rownames(temp_idconv) = temp_idconv$ENTREZ_GENE
         uniprot = temp_idconv$UNIPROTKB[entrez]
     }else{
@@ -188,7 +192,8 @@ entrez.to.uniprot = function(entrez=NULL,id.con.set=id.conversion.set){
 #' @author Mehran Karimzadeh mehran.karimzadehreghbati at mail dot mcgill dot ca
 ensembl.to.uniprot = function(ensembl=NULL,id.con.set=id.conversion.set){
     if(any(ensembl %in% id.con.set$ENSEMBL)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$ENSEMBL) | is.na(id.con.set$UNIPROTKB)), ]
+        temp_idconv = id.con.set[-which(is.na(id.con.set$ENSEMBL) | is.na(id.con.set$UNIPROTKB)),]
+        temp_idconv = temp_idconv[-which(duplicated(temp_idconv$ENSEMBL)), ]
         rownames(temp_idconv) = temp_idconv$ENSEMBL
         uniprot = temp_idconv$UNIPROTKB[ensembl]
     }else{
@@ -213,7 +218,8 @@ ensembl.to.uniprot = function(ensembl=NULL,id.con.set=id.conversion.set){
 refseqp.to.uniprot = function(refseqp=NULL,
                                id.con.set=id.conversion.set){
     if(any(refseqp %in% id.con.set$REFSEQ_PROTEIN)){
-        temp_idconv = id.con.set[-which(duplicated(id.con.set$REFSEQ_PROTEIN) | is.na(id.con.set$UNIPROTKB)), ]
+        temp_idconv = id.con.set[-which(is.na(id.con.set$REFSEQ_PROTEIN) | is.na(id.con.set$UNIPROTKB)),]
+        temp_idconv = temp_idconv[-which(duplicated(temp_idconv$REFSEQ_PROTEIN)), ]
         rownames(temp_idconv) = temp_idconv$REFSEQ_PROTEIN
         uniprot = temp_idconv$UNIPROTKB[refseqp]
     }else{
@@ -299,27 +305,6 @@ snv.id.conversion = function(snv=NULL
         snv.rn = snv.rn[-which(duplicated(snv.rn))]
     }
     rownames(snv) = snv.rn
-    if(any(grepl("NA|",snv[,1]))){
-        i=grep("NA|",snv[,1])
-        snv[i,] = apply(snv[i,],c(1,2),function(x){
-            temp = unlist(strsplit(as.character(x),"|",T))
-            if(any(grepl("NA",temp))){
-                temp = temp[-which(temp=="NA")]
-            }
-            if(length(temp)!=0){
-                temp = paste(temp,collapse="|")
-            }else{
-                temp = NA
-            }
-            return(temp)
-        })
-        for(j in 1:dim(snv)[2]){
-            if(any(grepl("NA",snv[,j]))){
-                i=grep("NA",snv[,j])
-                snv[i,j][which(snv[i,j]=="NA")] = NA
-            }
-        }
-    }
     return(snv)
     ### An appropriate matrix of mutations for abhac analysis
 }
