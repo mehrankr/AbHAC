@@ -497,7 +497,7 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
         cutoff=median(FDR.lists)
         df$FDR = ifelse(df[,2] <= cutoff, 0, 1)
     }else if(fisher.fdr == "Permutation.FWER"){
-        min.pvalues = lapply(list.pvalues[2:n.nets], min)
+        min.pvalues = unlist(lapply(list.pvalues[2:n.nets], min))
         cutoff = quantile(min.pvalues, fisher.fdr.cutoff)
         df = list.pvalues[[1]]
         df$FDR = ifelse(df[,2] <= cutoff, 0, 1)
