@@ -497,7 +497,12 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
         cutoff=median(FDR.lists)
         df$FDR = ifelse(df[,2] <= cutoff, 0, 1)
     }else if(fisher.fdr == "Permutation.FWER"){
-        min.pvalues = unlist(lapply(list.pvalues[2:n.nets], min))
+        min.pvalues = unlist(lapply(list.pvalues[2:n.nets], function(pval_df){
+            pval_net = pval_df[,2]
+            if(any(is.na(pval_net))){
+        	pval_net = pval_net[-which(is.na(pval_net))]
+            }
+            return(min(pval_net))}))
         cutoff = quantile(min.pvalues, fisher.fdr.cutoff)
         df = list.pvalues[[1]]
         df$FDR = ifelse(df[,2] <= cutoff, 0, 1)
@@ -506,6 +511,7 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
         df$FDR = p.adjust(df[,2], method=fisher.fdr)
         cutoff = max(which(df[,2]<=fisher.fdr.cutoff))
     }
+    cat(sprintf("Cutoff determined by %s method is %s\n", fisher.fdr, as.character(cutoff)))
     return(df)
 }
 
@@ -554,6 +560,7 @@ Integrator = function(ppi.database=NULL,
     ppi.lists = list()
     if(grepl("ermut", fisher.fdr)){
         ppi.lists = vector("list", (num.permuted.ppi + 1))
+        cat(sprintf("Creating %d permuted network for multiple testing correction\n", num.permuted.ppi))
     }
     ppi.lists[[1]] = ppi.database
     names(ppi.lists)[1] = "MainNetwork"
@@ -562,6 +569,7 @@ Integrator = function(ppi.database=NULL,
     for(l in 1:length(list.categories)){
         ###Fina all the proteins that interact with at least one of the proteins in list.categories[[i]]
         list.pvalues = foreach(p=1:(num.permuted.ppi + 1)) %dopar% {
+            cat(sprintf("Creating p-values for network %d. at %s\n", p, as.character(Sys.time())))
             ppi.dat = ppi.lists[[p]]
             if(is.null(ppi.dat)){
                 ppi.dat = permute_pdr(ppi.database, df_pr_freq, method=method.permuted.ppi, k=bins.permuted.ppi)
