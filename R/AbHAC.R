@@ -84,7 +84,7 @@ uniprot.to.hgnc = function(uniprot, id.con.set=id.conversion.set){
         temp_idconv = id.con.set[-which(is.na(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)),]
         temp_idconv = temp_idconv[-which(duplicated(temp_idconv$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
-        hgnc = temp_idconv$GENES[uniprot]
+        hgnc = temp_idconv[uniprot, "GENES"]
     }else{
         warning(sprintf("Uniprot to HGNC conversion failed for %s %s %s ...\n",
                         uniprot[1], uniprot[2], uniprot[3]))
@@ -110,7 +110,7 @@ hgnc.to.uniprot = function(hgnc, id.con.set=id.conversion.set){
         temp_idconv = id.con.set[-which(is.na(id.con.set$GENES) | is.na(id.con.set$UNIPROTKB)),]
         temp_idconv = temp_idconv[-which(duplicated(temp_idconv$GENES)), ]
         rownames(temp_idconv) = temp_idconv$GENES
-        uniprot = temp_idconv$UNIPROTKB[hgnc]
+        uniprot = temp_idconv[hgnc, "UNIPROTKB"]
     }else{
         warning(sprintf("HGNC to Uniprot conversion failed for %s %s %s ...\n",
                         hgnc[1], hgnc[1], hgnc[3]))
@@ -139,7 +139,7 @@ uniprot.to.entrez = function(uniprot=NULL,id.con.set=id.conversion.set){
         temp_idconv = id.con.set[-which(is.na(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)),]
         temp_idconv = temp_idconv[-which(duplicated(temp_idconv$UNIPROTKB)), ]
         rownames(temp_idconv) = temp_idconv$UNIPROTKB
-        entrez = temp_idconv$ENTREZ_GENE[uniprot]
+        entrez = temp_idconv[uniprot, "ENTREZ_GENE"]
     }else{
         warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
                         uniprot[1], uniprot[2], uniprot[3]))
@@ -168,7 +168,7 @@ entrez.to.uniprot = function(entrez=NULL,id.con.set=id.conversion.set){
         temp_idconv = id.con.set[-which(is.na(id.con.set$ENTREZ_GENE) | is.na(id.con.set$UNIPROTKB)),]
         temp_idconv = temp_idconv[-which(duplicated(temp_idconv$ENTREZ_GENE)), ]
         rownames(temp_idconv) = temp_idconv$ENTREZ_GENE
-        uniprot = temp_idconv$UNIPROTKB[entrez]
+        uniprot = temp_idconv[entrez, "UNIPROTKB"]
     }else{
         warning(sprintf("Uniprot to Entrez conversion failed for %s %s %s ...\n",
                         entrez[1], entrez[2], entrez[3]))
@@ -195,7 +195,7 @@ ensembl.to.uniprot = function(ensembl=NULL,id.con.set=id.conversion.set){
         temp_idconv = id.con.set[-which(is.na(id.con.set$ENSEMBL) | is.na(id.con.set$UNIPROTKB)),]
         temp_idconv = temp_idconv[-which(duplicated(temp_idconv$ENSEMBL)), ]
         rownames(temp_idconv) = temp_idconv$ENSEMBL
-        uniprot = temp_idconv$UNIPROTKB[ensembl]
+        uniprot = temp_idconv[ensembl, "UNIPROTKB"]
     }else{
         warning(sprintf("Ensembl to Uniprot conversion failed for %s %s %s ...\n",
                         ensembl[1], ensembl[2], ensembl[3]))
@@ -221,7 +221,7 @@ refseqp.to.uniprot = function(refseqp=NULL,
         temp_idconv = id.con.set[-which(is.na(id.con.set$REFSEQ_PROTEIN) | is.na(id.con.set$UNIPROTKB)),]
         temp_idconv = temp_idconv[-which(duplicated(temp_idconv$REFSEQ_PROTEIN)), ]
         rownames(temp_idconv) = temp_idconv$REFSEQ_PROTEIN
-        uniprot = temp_idconv$UNIPROTKB[refseqp]
+        uniprot = temp_idconv[refseqp, "UNIPROTKB"]
     }else{
         warning(sprintf("Regseqp to Uniprot conversion failed for %s %s %s ...\n",
                         refseqp[1], refseqp[2], refseqp[3]))
