@@ -474,7 +474,7 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
             while(fdr=="Not Found"){
                 pv.cut=pvalues[p.ind]
                 n.ran = length(which(ppi.net[,2]<=pv.cut))
-                n.act = length(which(list.pvalues[[11]][,2]<=pv.cut))
+                n.act = length(which(list.pvalues[[1]][,2]<=pv.cut))
                 if(is.na(n.ran/n.act) | is.na(n.ran/n.act)){
                     fdr="Found"
                 }else if( (n.ran/n.act) <= fisher.fdr.cutoff){
