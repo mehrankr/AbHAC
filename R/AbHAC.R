@@ -442,15 +442,15 @@ permute_pdr = function(ppi.database, df_pr_freq, method="AsPaper", k=4, verbose=
 #' @return A protein interaction 2 column dataframe of unique undirected interactions
 #' @author Mehran Karimzadeh mehran dot karimzadehreghbati at mail dot mcgill dot ca 
 remove_duplicate_interactions = function(ppi.database){
-    ppi_temp = unique(ppi.database)
-    ppi_temp$AB = paste(ppi_temp[,1], ppi_temp[,2], sep="_")
-    ppi_temp$BA = paste(ppi_temp[,2], ppi_temp[,1], sep="_")
-    # Removing reversed interactions
-    if(any(ppi_temp$BA %in% ppi_temp$AB)){
-        ppi_temp = ppi_temp[-which(ppi_temp$BA %in% ppi_temp$AB), 1:2]
-    }
+    ppi_temp = unique(ppi.database[, 1:2])
+    ppi_out = t(apply(ppi.database, 1, function(nodes){
+                      return(sort(nodes))}))
+    ppi_out = as.data.frame(ppi_out)
+    colnames(ppi_out) = colnames(ppi_temp)
+    ppi_out = unique(ppi_out)
     return(ppi_temp)
 }
+
 
 #' Corrects p-values by the provided multiple testing correction method
 #'
