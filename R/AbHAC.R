@@ -466,7 +466,11 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
         ##For each of the Random networks, perform the calculation seperately
         for(ppi.net in list.pvalues[2:n.nets]){
             cutoff=0.000
-            min.pval = min(list.pvalues[[1]][,2]) # Minimum p-value in real network
+            min.pval = min(as.numeric(list.pvalues[[1]][,2])) # Minimum p-value in real network
+            if(is.na(min.pval)){
+            	warning("Unable to calculate p-values for the provided network.
+            		Consult requirements of the network structure.")
+            }
             fdr="Not Found"
             pvalues = list.pvalues[[1]][,2] # All p-values in real network 
             pvalues = sort(pvalues[pvalues<=0.2],TRUE)
