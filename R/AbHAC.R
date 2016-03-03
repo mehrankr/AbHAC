@@ -469,7 +469,7 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
             min.pval = min(as.numeric(list.pvalues[[1]][,2])) # Minimum p-value in real network
             if(is.na(min.pval)){
             	warning("Unable to calculate p-values for the provided network.
-            		Consult requirements of the network structure.")
+            		Consult requirements of the network structure.(1)")
             }
             fdr="Not Found"
             pvalues = list.pvalues[[1]][,2] # All p-values in real network 
@@ -477,6 +477,11 @@ multiple.testing.correction.handler = function(list.pvalues, fisher.fdr, fisher.
             p.ind = 1
             while(fdr=="Not Found"){
                 pv.cut=pvalues[p.ind]
+                if(is.na(pv.cut)){
+                    pv.cut = 0.2
+                    warning("Unable to calculate p-values for the provided network.
+                    	    Consult requirements of the network structure.(2)")
+                }
                 n.ran = length(which(ppi.net[,2]<=pv.cut))
                 n.act = length(which(list.pvalues[[1]][,2]<=pv.cut))
                 if(is.na(n.ran/n.act) | is.na(n.ran/n.act)){
